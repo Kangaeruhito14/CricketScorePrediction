@@ -1,0 +1,10 @@
+group,n,MAE,RMSE,R2
+multiday | no ball limit,233992,61.31,84.7,0.589
+odi | final quarter,32888,15.2,20.8,0.842
+odi | first quarter,68487,43.72,57.58,0.262
+odi | second quarter,59458,34.9,45.96,0.495
+odi | third quarter,54596,26.12,34.19,0.672
+t20 | final quarter,89898,7.84,10.65,0.935
+t20 | first quarter,140612,21.86,29.27,0.596
+t20 | second quarter,137933,16.9,22.54,0.748
+t20 | third quarter,130331,12.7,16.81,0.849

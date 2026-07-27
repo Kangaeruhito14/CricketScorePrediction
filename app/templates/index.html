@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cricket Score Predictor</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --pitch:#0d1b14; --panel:#132a1e; --line:#1f4030;
+    --ink:#e8f0ea; --dim:#8fae9d; --hot:#f4c542; --cool:#4aa3df; --bad:#e2725b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--pitch);color:var(--ink);
+       font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:14px}
+  header{padding:20px 24px;border-bottom:1px solid var(--line);
+         display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:12px}
+  h1{margin:0;font-size:19px;letter-spacing:.06em;text-transform:uppercase}
+  .metrics{color:var(--dim);font-size:12px}
+  .metrics b{color:var(--hot)}
+  .tabs{display:flex;gap:2px;padding:0 24px;border-bottom:1px solid var(--line)}
+  .tab{padding:11px 18px;cursor:pointer;color:var(--dim);border-bottom:2px solid transparent}
+  .tab.on{color:var(--ink);border-bottom-color:var(--hot)}
+  main{padding:24px;max-width:1100px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
+  label{display:block;font-size:11px;color:var(--dim);margin-bottom:5px;
+        letter-spacing:.08em;text-transform:uppercase}
+  select,input{width:100%;padding:9px 10px;background:var(--panel);color:var(--ink);
+       border:1px solid var(--line);border-radius:3px;font-family:inherit;font-size:14px}
+  button{margin-top:18px;padding:12px 26px;background:var(--hot);color:#111;border:0;
+         border-radius:3px;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;
+         letter-spacing:.06em;text-transform:uppercase}
+  button:hover{filter:brightness(1.1)}
+  .out{margin-top:24px;padding:22px;background:var(--panel);border:1px solid var(--line);
+       border-radius:4px;display:none}
+  .big{font-size:52px;font-weight:700;color:var(--hot);line-height:1}
+  .band{font-size:17px;color:var(--cool);margin-top:8px}
+  .sub{color:var(--dim);margin-top:14px;font-size:12.5px;line-height:1.7}
+  .note{margin-top:18px;padding:12px 14px;border-left:2px solid var(--bad);
+        color:var(--dim);font-size:12px;line-height:1.6;background:#00000030}
+  table{border-collapse:collapse;width:100%;margin-top:14px;font-size:12.5px}
+  th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line)}
+  th{color:var(--dim);font-weight:400;text-transform:uppercase;font-size:11px;letter-spacing:.06em}
+  .chartbox{margin-top:20px;padding:16px;background:var(--panel);
+            border:1px solid var(--line);border-radius:4px}
+  .hide{display:none}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🏏 Cricket Score Predictor</h1>
+  <div class="metrics" id="hdr">loading…</div>
+</header>
+
+<div class="tabs">
+  <div class="tab on" data-t="live">Predict</div>
+  <div class="tab" data-t="replay">Replay a real match</div>
+  <div class="tab" data-t="about">Model honesty</div>
+</div>
+
+<main>
+
+<!-- ============ PREDICT ============ -->
+<section id="live">
+  <div class="grid">
+    <div><label>Format</label><select id="fam" onchange="onFamily()"></select></div>
+    <div><label>Batting team</label><select id="bat"></select></div>
+    <div><label>Bowling team</label><select id="bowl"></select></div>
+    <div><label>Venue</label><select id="venue"></select></div>
+    <div><label>Competition</label><select id="evt"></select></div>
+    <div><label>Overs done</label><input id="overs" type="number" step="0.1" min="1" max="20" value="10.0"></div>
+    <div><label>Current score</label><input id="score" type="number" min="0" value="78"></div>
+    <div><label>Wickets down</label><input id="wkts" type="number" min="0" max="10" value="2"></div>
+    <div><label>Runs in last 5 overs</label><input id="l30" type="number" min="0" value="42"></div>
+    <div><label>Fours so far</label><input id="fours" type="number" min="0" value="8"></div>
+    <div><label>Sixes so far</label><input id="sixes" type="number" min="0" value="2"></div>
+    <div><label>Innings no.</label><input id="inn" type="number" min="1" max="4" value="1"></div>
+    <div><label>Target (0 if not chasing)</label><input id="tgt" type="number" min="0" value="0"></div>
+  </div>
+  <button onclick="predict()">Predict final score</button>
+
+  <div class="out" id="out">
+    <div class="big" id="pv">—</div>
+    <div class="band" id="bd"></div>
+    <div class="sub" id="sb"></div>
+  </div>
+</section>
+
+<!-- ============ REPLAY ============ -->
+<section id="replay" class="hide">
+  <div class="grid" style="grid-template-columns:1fr auto">
+    <div><label>Pick a match the model never saw in training</label>
+      <select id="mlist"></select></div>
+    <div style="align-self:end"><button style="margin:0" onclick="replay()">Replay</button></div>
+  </div>
+  <div class="chartbox"><canvas id="chart" height="110"></canvas></div>
+  <div class="sub" id="rinfo"></div>
+</section>
+
+<!-- ============ ABOUT ============ -->
+<section id="about" class="hide">
+  <p class="sub" style="margin-top:0">
+    Every number below comes from matches played <b>after</b> the last match in
+    the training set. Nothing here is measured on data the model has seen.
+  </p>
+  <table id="fmt"></table>
+  <p class="sub">Error naturally scales with how many runs a format produces.
+  A 30-run miss on a 250-run ODI innings is a much smaller mistake than a
+  30-run miss on a 150-run T20 innings, so read each format on its own row.</p>
+  <table id="phase"></table>
+  <div class="note" id="leak"></div>
+</section>
+
+</main>
+
+<script>
+let META=null, chart=null;
+
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+  t.classList.add('on');
+  ['live','replay','about'].forEach(id=>
+    document.getElementById(id).classList.toggle('hide', id!==t.dataset.t));
+});
+
+function fill(sel, arr){
+  const el=document.getElementById(sel);
+  el.innerHTML=arr.map(v=>`<option>${v}</option>`).join('');
+}
+
+const FAM_LABEL={t20:'T20 / IT20 (120 balls)',odi:'ODI / List A (300 balls)',
+  multiday:'Test / multi-day (no ball limit)',long_limited:'Other limited-overs'};
+
+function onFamily(){
+  const f=document.getElementById('fam').value;
+  fill('bat', META.teams_by_family[f]||[]);
+  fill('bowl', META.teams_by_family[f]||[]);
+  fill('venue', META.venues_by_family[f]||[]);
+  fill('evt', (META.events_by_family[f]||[]).filter(Boolean));
+  const t=document.getElementById('bat');
+  if(t.options.length>1) document.getElementById('bowl').selectedIndex=1;
+  const tb=META.family_total_balls[f];
+  document.getElementById('overs').max = tb ? (tb/6) : 999;
+}
+
+async function boot(){
+  META = await (await fetch('/api/meta')).json();
+  const fs=document.getElementById('fam');
+  fs.innerHTML=META.families.map(f=>
+    `<option value="${f}">${FAM_LABEL[f]||f}</option>`).join('');
+  onFamily();
+  const m=META.metrics;
+  document.getElementById('hdr').innerHTML =
+    `trained on <b>${m.n_train_matches.toLocaleString()}</b> matches · ` +
+    `tested on <b>${m.n_test_matches.toLocaleString()}</b> future matches · ` +
+    `MAE <b>${m.test_mae}</b> runs`;
+
+  const mkTable = (rows, head) =>
+    `<tr><th>${head}</th><th>Balls</th><th>MAE (runs)</th><th>RMSE</th><th>R²</th></tr>` +
+    rows.map(r=>`<tr><td>${r.group}</td><td>${r.n.toLocaleString()}</td>
+      <td>${r.MAE}</td><td>${r.RMSE}</td><td>${r.R2}</td></tr>`).join('');
+  document.getElementById('fmt').innerHTML = mkTable(m.format_table,'Format');
+  document.getElementById('phase').innerHTML =
+    mkTable(m.phase_table,'Format and stage of innings');
+
+  document.getElementById('leak').innerHTML =
+    `<b>Why our headline number looks worse than most tutorials.</b><br>
+     Split the balls randomly and the same match lands in both train and test —
+     the target is a per-match constant, so the model just recalls it.
+     That path scores MAE <b>${m.leaky_mae}</b> / R² <b>${m.leaky_r2}</b>.
+     Splitting by date instead gives MAE <b>${m.test_mae}</b> / R² <b>${m.test_r2}</b>.
+     The second pair is what the model would actually do on tomorrow's match.<br><br>
+     The 80% band is calibrated on held-out validation residuals and covers
+     <b>${(m.coverage*100).toFixed(0)}%</b> of real outcomes on the test set.`;
+
+  const list = await (await fetch('/api/matches')).json();
+  document.getElementById('mlist').innerHTML =
+    list.map(x=>`<option value="${x.id}">${x.label}</option>`).join('');
+}
+
+async function predict(){
+  const body={
+    family:document.getElementById('fam').value,
+    batting_team:bat.value, bowling_team:bowl.value, venue:venue.value,
+    overs:parseFloat(overs.value), current_score:parseInt(score.value),
+    wickets:parseInt(wkts.value), last30_runs:parseFloat(l30.value),
+    fours:parseInt(fours.value), sixes:parseInt(sixes.value),
+    innings:parseInt(document.getElementById('inn').value),
+    target:parseInt(document.getElementById('tgt').value)
+  };
+  const r=await fetch('/api/predict',{method:'POST',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(!r.ok){ alert((await r.json()).detail); return; }
+  const d=await r.json();
+  out.style.display='block';
+  pv.textContent=d.predicted;
+  bd.textContent=`80% of the time it lands between ${d.low} and ${d.high}`;
+  const bl = d.balls_left===null ? 'no ball limit in this format'
+                                 : d.balls_left+' balls left';
+  const proj = d.projected_at_crr===null ? '' :
+    `<br>simply extending the current run rate would give ${d.projected_at_crr} —
+     the model adjusts that for wickets in hand, the stage of the innings,
+     the two teams and the ground.`;
+  sb.innerHTML=`current run rate <b>${d.crr}</b> · ${bl} ·
+    this ground averages <b>${d.venue_par}</b> in this format${proj}`;
+}
+
+async function replay(){
+  const id=document.getElementById('mlist').value;
+  const d=await (await fetch('/api/replay/'+encodeURIComponent(id))).json();
+  const labels=d.balls.map(b=>(Math.floor(b/6)+'.'+(b%6)));
+  if(chart) chart.destroy();
+  chart=new Chart(document.getElementById('chart'),{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'Predicted final',data:d.pred,borderColor:'#f4c542',
+       borderWidth:2,pointRadius:0,tension:.25},
+      {label:'80% band (low)',data:d.low,borderColor:'#4aa3df55',
+       borderWidth:1,pointRadius:0,fill:'+1',
+       backgroundColor:'rgba(74,163,223,.12)'},
+      {label:'80% band (high)',data:d.high,borderColor:'#4aa3df55',
+       borderWidth:1,pointRadius:0},
+      {label:'Actual final = '+d.final_score,
+       data:d.balls.map(()=>d.final_score),borderColor:'#e2725b',
+       borderWidth:2,borderDash:[6,4],pointRadius:0},
+      {label:'Runs on the board',data:d.score,borderColor:'#8fae9d',
+       borderWidth:1,pointRadius:0}
+    ]},
+    options:{responsive:true,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{labels:{color:'#8fae9d',boxWidth:12,font:{size:11}}}},
+      scales:{x:{ticks:{color:'#8fae9d',maxTicksLimit:12},grid:{color:'#1f4030'},
+                 title:{display:true,text:'over.ball',color:'#8fae9d'}},
+              y:{ticks:{color:'#8fae9d'},grid:{color:'#1f4030'},
+                 title:{display:true,text:'runs',color:'#8fae9d'}}}}
+  });
+  document.getElementById('rinfo').innerHTML =
+    `<b>${d.batting_team}</b> vs ${d.bowling_team} · ${d.match_type} · ${d.venue} · ${d.date}<br>
+     They finished on <b>${d.final_score}</b>.
+     Averaged across every ball of the innings the model was off by
+     <b>${d.mae}</b> runs. Watch the yellow line: early on it barely moves,
+     because at that point almost nothing has happened yet. It locks on
+     later on, and the blue band narrows as the innings runs out of balls to
+     be surprising in.`;
+}
+boot();
+</script>
+</body>
+</html>

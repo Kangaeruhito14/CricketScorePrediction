@@ -1,0 +1,43 @@
+{
+  // ---- interpreter -------------------------------------------------------
+  // Point Antigravity at the venv inside this project. Without this it falls
+  // back to its own bundled Python and every import shows as unresolved.
+  "python.defaultInterpreterPath": "${workspaceFolder}/venv/bin/python",
+  "python.terminal.activateEnvironment": true,
+  "python.terminal.activateEnvInCurrentTerminal": true,
+  "python.analysis.typeCheckingMode": "off",
+
+  // ---- keep the indexer away from the heavy folders ----------------------
+  // all_json holds ~22,000 files and data/ holds ~100 MB of parquet. If the
+  // file watcher tries to index them the editor will crawl or hang.
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/.pytest_cache": true,
+    "**/all_json": true
+  },
+  "files.watcherExclude": {
+    "**/all_json/**": true,
+    "**/data/**": true,
+    "**/venv/**": true,
+    "**/models/**": true,
+    "**/.git/**": true
+  },
+  "search.exclude": {
+    "**/all_json": true,
+    "**/data": true,
+    "**/venv": true,
+    "**/*.parquet": true
+  },
+  "python.analysis.exclude": ["**/all_json/**", "**/venv/**", "**/data/**"],
+
+  // ---- editor ------------------------------------------------------------
+  "editor.rulers": [88],
+  "editor.formatOnSave": false,
+  "[python]": {
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "editor.detectIndentation": false
+  },
+  "files.trimTrailingWhitespace": true,
+  "terminal.integrated.scrollback": 20000
+}

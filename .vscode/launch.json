@@ -1,0 +1,39 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "▶ Web app (uvicorn, reload)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": ["app.main:app", "--reload", "--port", "8000"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "justMyCode": false
+    },
+    {
+      "name": "1 · Parse JSON → parquet",
+      "type": "debugpy", "request": "launch",
+      "program": "${workspaceFolder}/src/01_parse.py",
+      "cwd": "${workspaceFolder}", "console": "integratedTerminal"
+    },
+    {
+      "name": "2 · Feature engineering",
+      "type": "debugpy", "request": "launch",
+      "program": "${workspaceFolder}/src/02_features.py",
+      "cwd": "${workspaceFolder}", "console": "integratedTerminal"
+    },
+    {
+      "name": "3 · Train + evaluate",
+      "type": "debugpy", "request": "launch",
+      "program": "${workspaceFolder}/src/03_train.py",
+      "cwd": "${workspaceFolder}", "console": "integratedTerminal"
+    },
+    {
+      "name": "4 · Export app assets",
+      "type": "debugpy", "request": "launch",
+      "program": "${workspaceFolder}/src/04_export_app_assets.py",
+      "cwd": "${workspaceFolder}", "console": "integratedTerminal"
+    }
+  ]
+}

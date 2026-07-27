@@ -1,0 +1,29 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run web app",
+      "type": "shell",
+      "command": "${workspaceFolder}/venv/bin/uvicorn app.main:app --reload --port 8000",
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "Rebuild: features → train → export",
+      "type": "shell",
+      "command": "${workspaceFolder}/venv/bin/python src/02_features.py && ${workspaceFolder}/venv/bin/python src/03_train.py && ${workspaceFolder}/venv/bin/python src/04_export_app_assets.py",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": [],
+      "group": { "kind": "build", "isDefault": true }
+    },
+    {
+      "label": "Train T20-only (comparison run)",
+      "type": "shell",
+      "command": "sed -i 's/^ONLY_FAMILY = .*/ONLY_FAMILY = \"t20\"/' src/03_train.py && ${workspaceFolder}/venv/bin/python src/03_train.py; sed -i 's/^ONLY_FAMILY = .*/ONLY_FAMILY = None/' src/03_train.py",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    }
+  ]
+}

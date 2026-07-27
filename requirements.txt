@@ -1,0 +1,16 @@
+# --- data pipeline ---
+orjson==3.10.18
+pyarrow==17.0.0
+pandas==2.2.3
+numpy==1.26.4
+tqdm==4.67.1
+
+# --- modelling ---
+scikit-learn==1.5.2
+lightgbm==4.5.0
+joblib==1.4.2
+
+# --- web app ---
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
