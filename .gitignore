@@ -1,0 +1,17 @@
+venv/
+__pycache__/
+*.pyc
+
+# raw + intermediate data: too big for git, rebuild with run_all.sh
+all_json/
+all_json.zip
+data/*.parquet
+
+# agent tooling: installed skills and the graphify knowledge graph are
+# regenerable and not part of the deliverable
+.claude/skills/
+graphify-out/
+
+# these two ARE committed - the deployed app needs them
+!models/
+!app/replay_sample.parquet
