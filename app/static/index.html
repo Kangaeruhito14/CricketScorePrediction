@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cricket Score Predictor</title>
+<meta name="description" content="Predict the final score of a cricket innings from its live state, across T20, ODI and multi-day formats.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,500..800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/css/tokens.css">
+<link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/css/components.css">
+</head>
+<body class="page">
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="shell site-header__inner">
+    <a class="brand" href="/">
+      <svg class="brand__mark" viewBox="0 0 26 26" aria-hidden="true" focusable="false">
+        <rect x="2" y="14" width="5" height="10" rx="1.5" fill="currentColor" opacity=".38"/>
+        <rect x="10.5" y="9" width="5" height="15" rx="1.5" fill="currentColor" opacity=".62"/>
+        <rect x="19" y="4" width="5" height="20" rx="1.5" fill="var(--predict)"/>
+      </svg>
+      <span class="brand__text">Cricket Score Predictor</span>
+    </a>
+
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu">
+      <span class="nav-toggle__bars" aria-hidden="true"><span></span><span></span><span></span></span>
+    </button>
+
+    <nav id="site-nav" class="site-nav" aria-label="Main">
+      <ul class="site-nav__list">
+        <li><a class="site-nav__link" href="/">Home</a></li>
+        <li><a class="site-nav__link" href="/predict.html">Predict</a></li>
+        <li><a class="site-nav__link" href="/replay.html">Replay</a></li>
+        <li><a class="site-nav__link" href="/results.html">Results</a></li>
+        <li><a class="site-nav__link" href="/about.html">About</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main" class="page__main">
+
+  <!-- PHASE 2 SPECIMEN.
+       This block exists so the design system can be checked in a browser at
+       every breakpoint before any page is built on it. Phase 3 replaces it
+       with the real hero and headline metrics. -->
+  <section class="band">
+    <div class="shell">
+      <div class="band__head">
+        <span class="eyebrow">Design system</span>
+        <h1>Every component, one page</h1>
+        <p>Type scale, colour, spacing and controls, so the system can be checked at 320&nbsp;px before a page is built on it.</p>
+      </div>
+
+      <div class="stack--loose stack">
+        <div>
+          <h3>Type scale</h3>
+          <div class="stack--tight stack" style="margin-top: var(--sp-4)">
+            <div style="font-family: var(--font-display); font-size: var(--step-5); font-weight: 800; line-height: 1.02; letter-spacing: -0.02em">Display 5</div>
+            <div style="font-family: var(--font-display); font-size: var(--step-4); font-weight: 700; line-height: 1.02">Display 4</div>
+            <div style="font-family: var(--font-display); font-size: var(--step-3); font-weight: 700">Display 3</div>
+            <div style="font-size: var(--step-1)">Body large — the model reads the live state of an innings and returns a final score.</div>
+            <div style="font-size: var(--step-0)">Body — 21,719 matches, 46,761 innings, 11.3 million deliveries.</div>
+            <div class="small faint">Small — the smallest text on the site is 12&nbsp;px.</div>
+            <div class="mono num">Mono tabular — 184/6 (17.3) · 11.4 · 120</div>
+          </div>
+        </div>
+
+        <div>
+          <h3>Colour</h3>
+          <div class="grid grid--narrow" style="margin-top: var(--sp-4)">
+            <div class="card card--predict"><div class="stat stat--predict"><span class="stat__value num">175</span><span class="stat__label">Prediction</span><span class="stat__note">Aqua is always what the model says.</span></div></div>
+            <div class="card card--actual"><div class="stat stat--actual"><span class="stat__value num">184</span><span class="stat__label">Actual</span><span class="stat__note">Amber is always what happened.</span></div></div>
+            <div class="card card--warn"><div class="stat stat--warn"><span class="stat__value num">+9</span><span class="stat__label">Warning</span><span class="stat__note">Coral for errors and wickets.</span></div></div>
+          </div>
+        </div>
+
+        <div>
+          <h3>Buttons</h3>
+          <div class="row" style="margin-top: var(--sp-4)">
+            <button class="btn btn--primary btn--lg" type="button">Predict final score</button>
+            <button class="btn btn--primary" type="button">Primary</button>
+            <button class="btn btn--secondary" type="button">Secondary</button>
+            <button class="btn btn--ghost" type="button">Ghost</button>
+            <button class="btn btn--danger btn--sm" type="button">Clear all</button>
+            <button class="btn btn--primary" type="button" disabled>Disabled</button>
+            <button class="btn btn--icon" type="button" aria-label="Swap batting and bowling team">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 16V4m0 0L3 8m4-4 4 4"/><path d="M17 8v12m0 0 4-4m-4 4-4-4"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <h3>Fields</h3>
+          <div class="field-group" style="margin-top: var(--sp-4)">
+            <div class="field">
+              <label class="field__label" for="spec-a">Overs completed</label>
+              <input class="input num" id="spec-a" type="number" value="11" min="0">
+              <span class="field__hint">Whole overs bowled.</span>
+            </div>
+            <div class="field" data-invalid="true">
+              <label class="field__label" for="spec-b">Balls this over</label>
+              <input class="input num" id="spec-b" type="number" value="7" min="0" max="5" aria-describedby="spec-b-err" aria-invalid="true">
+              <span class="field__error" id="spec-b-err">An over has six legal balls, so this must be 0–5.</span>
+            </div>
+            <div class="field">
+              <label class="field__label" for="spec-c">Venue</label>
+              <div class="combobox" data-open="false">
+                <input class="input combobox__input" id="spec-c" type="text" value="Sydney Cricket Ground" role="combobox" aria-expanded="false" aria-controls="spec-lb" autocomplete="off">
+                <span class="combobox__toggle" aria-hidden="true">
+                  <svg viewBox="0 0 12 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m1 1.5 5 5 5-5"/></svg>
+                </span>
+                <ul class="combobox__listbox" id="spec-lb" role="listbox" aria-label="Venue"></ul>
+              </div>
+              <span class="field__hint">Search by ground or city.</span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h3>Combobox, open</h3>
+          <div style="max-width: 26rem; margin-top: var(--sp-4)">
+            <div class="combobox" data-open="true">
+              <input class="input combobox__input" type="text" value="sydney" role="combobox" aria-expanded="true" aria-controls="spec-lb2" aria-label="Venue search" autocomplete="off">
+              <!-- The listbox is pinned open and in flow so the open state can
+                   be inspected; that makes the container tall, so the toggle
+                   is anchored to the input rather than centred on it. -->
+              <span class="combobox__toggle" aria-hidden="true" style="top: 22px; transform: none">
+                <svg viewBox="0 0 12 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m1 1.5 5 5 5-5"/></svg>
+              </span>
+              <ul class="combobox__listbox" id="spec-lb2" role="listbox" aria-label="Venue" style="position: static; max-height: none; box-shadow: none; margin-top: var(--sp-2)">
+                <li class="combobox__option" role="option" aria-selected="true" data-active="true"><span><mark>Sydney</mark> Cricket Ground</span><span class="combobox__meta">Sydney</span></li>
+                <li class="combobox__option" role="option" aria-selected="false"><span>Stadium Australia</span><span class="combobox__meta"><mark>Sydney</mark></span></li>
+                <li class="combobox__option" role="option" aria-selected="false"><span>Bankstown Oval</span><span class="combobox__meta"><mark>Sydney</mark></span></li>
+                <li class="combobox__option" role="option" aria-selected="false"><span>North Sydney Oval</span><span class="combobox__meta">Sydney</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h3>Table</h3>
+          <div class="table-wrap" style="margin-top: var(--sp-4)">
+            <div class="scroll-x">
+              <table class="data">
+                <caption>Error scales with how many runs a format produces. Read each row on its own.</caption>
+                <thead><tr><th scope="col">Format</th><th scope="col" class="n">Rows</th><th scope="col" class="n">MAE</th><th scope="col" class="n">RMSE</th><th scope="col" class="n">R²</th></tr></thead>
+                <tbody>
+                  <tr><td>T20</td><td class="n">498,777</td><td class="n">15.57</td><td class="n">21.83</td><td class="n">0.759</td></tr>
+                  <tr><td>ODI</td><td class="n">215,429</td><td class="n">32.47</td><td class="n">44.72</td><td class="n">0.500</td></tr>
+                  <tr><td>Multi-day</td><td class="n">233,992</td><td class="n">61.31</td><td class="n">84.70</td><td class="n">0.589</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h3>Badges, callouts, states</h3>
+          <div class="row" style="margin-top: var(--sp-4)">
+            <span class="badge">T20</span>
+            <span class="badge badge--predict">Prediction</span>
+            <span class="badge badge--actual">Actual</span>
+            <span class="badge badge--warn">Leaky split</span>
+          </div>
+          <div class="stack" style="margin-top: var(--sp-4)">
+            <div class="callout"><strong>Every context feature is as-of-date.</strong> A venue's par score counts only matches played before the one being predicted.</div>
+            <div class="callout callout--warn"><strong>The flattering number is the wrong one.</strong> A random split puts ball 12.3 in train and ball 12.4 in test.</div>
+            <div class="empty-state"><strong>No predictions yet</strong>Make one and it will be saved here.</div>
+            <p class="skeleton" style="max-width: 22rem">Loading placeholder</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="shell">
+    <div class="site-footer__grid">
+      <div>
+        <h2>Cricket Score Predictor</h2>
+        <p>Final-score prediction from the live state of an innings, across every format in the Cricsheet archive.</p>
+      </div>
+      <div>
+        <h2>Pages</h2>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/predict.html">Predict</a></li>
+          <li><a href="/replay.html">Replay</a></li>
+          <li><a href="/results.html">Results</a></li>
+          <li><a href="/about.html">About</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2>What it does not know</h2>
+        <p>No weather, no pitch report, no team sheet. Predictions are estimates from historical patterns, not forecasts of a particular match.</p>
+      </div>
+    </div>
+    <div class="site-footer__base">
+      <span>Ball-by-ball data from <a href="https://cricsheet.org" rel="noreferrer noopener">Cricsheet</a>.</span>
+      <span>LightGBM · evaluated on a temporal split</span>
+    </div>
+  </div>
+</footer>
+
+<script src="/js/nav.js"></script>
+</body>
+</html>
