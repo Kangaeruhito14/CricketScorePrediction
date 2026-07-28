@@ -48,35 +48,89 @@ of `src/03_train.py` and run it both ways.
 ## Pipeline
 
 ```
-all_json/*.json                    ~22,400 Cricsheet match files
+all_json/*.json                    22,326 Cricsheet match files (git-ignored)
    │
    ├─ src/01_parse.py              → data/matches.parquet, data/deliveries.parquet
    ├─ src/02_features.py           → data/model_data.parquet   (leakage-safe)
    ├─ src/03_train.py              → models/*.txt, models/meta.json, reports/*
    └─ src/04_export_app_assets.py  → models/lookups.json, app/replay_sample.parquet
                                         │
-                                        └─ app/main.py  (FastAPI web GUI)
+                                        └─ app/main.py  (FastAPI: API + static site)
 ```
 
+21,719 of those matches survive stage 2 — the rest are dropped as
+rain-shortened, abandoned part-way, or otherwise not comparable.
+
 ## Quick start
+
+The trained model and its lookups are committed, so the site runs without
+rebuilding anything:
 
 ```bash
 python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
-./run_all.sh
-uvicorn app.main:app --reload --port 8000
+venv/bin/python -m uvicorn app.main:app --reload --port 8000
 ```
 
 Then open <http://127.0.0.1:8000>.
 
+To rebuild the model from the raw archive instead, put the Cricsheet JSON in
+`all_json/` and run `./run_all.sh` first. Stages 1–3 take roughly 50 minutes;
+stage 4 alone takes about a minute and is all you need if only the app assets
+have changed.
+
 ## The web app
 
-- **Predict** — enter the live match state, get a final-score estimate plus an
-  80% band.
-- **Replay a real match** — pick a match the model never trained on and watch
-  the prediction move ball by ball against the actual final score. This is the
-  demo worth showing.
-- **Model honesty** — per-phase error table and the leakage comparison.
+Five pages, served by FastAPI from `app/static/`. There is no second runtime —
+the model is LightGBM and has to be served from Python, so a separate frontend
+service would have meant two deployments and two cold starts.
+
+| Page | What it does |
+|---|---|
+| `/` | What the project is, in one sentence, beside a live worked prediction. Headline figures are read from the API, never typed in. |
+| `/predict.html` | The prediction tool: match setup, live state, result. Cascading filters, searchable fields, inline validation, saved history. |
+| `/replay.html` | Ball-by-ball replay of a real innings with a hover readout, playback controls, and a table of the balls that mattered. |
+| `/results.html` | The full evaluation report — error by format and by phase, the leakage comparison, interval calibration, feature importance. |
+| `/about.html` | Method and an honest account of the limits. |
+
+```
+app/
+  main.py                 FastAPI: API + StaticFiles mount
+  replay_sample.parquet   ball-by-ball rows for the replay demo
+  static/
+    index.html  predict.html  replay.html  results.html  about.html
+    css/  tokens.css  base.css  components.css  predict.css  replay.css  results.css
+    js/   api.js  nav.js  combobox.js  history.js
+          home.js  about.js  predict.js  replay.js  results.js
+```
+
+`tokens.css` is the only file allowed to name a colour, a size or a duration.
+Everything else reads its custom properties, which is what makes the light and
+dark themes a single source of truth rather than two stylesheets.
+
+### API
+
+| Endpoint | Returns |
+|---|---|
+| `GET /api/meta` | Dropdown lists and headline metrics per format |
+| `GET /api/options?family=&event=` | Team, venue and competition lists scoped to one format + competition, plus each venue's city |
+| `GET /api/report` | Everything `results.html` renders |
+| `POST /api/predict` | One prediction from a manual match state |
+| `GET /api/matches` | Innings available for replay |
+| `GET /api/replay/{id}` | Ball-by-ball predictions for one real innings |
+
+Overs are sent as two integers — `overs_completed` and `balls_this_over`
+(0–5) — not one float. An over is six legal balls, so `11.7` describes nothing
+that can happen on a field; as a float it silently rounded to a real state and
+the model answered as though the input made sense. It is now a 422 with a
+message explaining the rule.
+
+### Nothing on the site is a typed-in number
+
+Every figure the pages show comes from the API at runtime. A test asserts that
+none of the 39 values `/api/report` supplies appears anywhere in the served
+HTML, so retraining the model updates the site by itself and cannot leave a
+stale number behind on the page that reports it.
 
 ## Prediction intervals
 
@@ -98,3 +152,39 @@ near nominal, and the band visibly narrows as the innings runs out of balls.
   deliveries and would otherwise dominate the loss by sheer row count.
 - Cricsheet withholds a small number of matches, so the archive is not literally
   every match ever played.
+- A side or ground the model never saw in training falls back to a format-wide
+  average. The prediction still looks confident and is worth considerably less.
+
+`/about.html` says all of this in full, and quotes no accuracy figure anywhere.
+
+## Deployment
+
+One Render service, no build step beyond `pip install`:
+
+```yaml
+startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+```
+
+`models/` and `app/replay_sample.parquet` are committed because the deployed
+app needs both and regenerating them costs a full retrain. On a free tier the
+first request after idling pays a cold start while the 4.6 MB booster and the
+replay parquet load into memory.
+
+## Credits
+
+Built on an existing baseline — the parsing, feature engineering and training
+pipeline in `src/01_parse.py`, `src/02_features.py` and `src/03_train.py`,
+which this project uses unmodified.
+
+<!-- TODO: replace this line with the correct name and attribution wording. -->
+
+The web layer (`app/static/`), the API additions in `app/main.py`, and the
+competition-scoped exports in `src/04_export_app_assets.py` were built on top
+of that baseline.
+
+## Reading the code
+
+`AGENTS.md` is the file to read before changing anything — it records the
+decisions that look wrong without their reasoning, including why the split
+must stay temporal and why the leakage demonstration in `src/03_train.py` is
+the point of the project rather than dead code.
