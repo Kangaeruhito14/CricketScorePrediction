@@ -2,7 +2,7 @@
 Cricket Score Predictor — FastAPI backend (all formats)
 
 Endpoints
-  GET  /                 the web GUI
+  GET  /                 the site, served from app/static
   GET  /api/meta         dropdowns + honest metrics, per format
   GET  /api/options      team/venue/event lists scoped to a format+competition
   GET  /api/report       everything the model-results page renders
@@ -20,7 +20,8 @@ import pandas as pd
 import lightgbm as lgb
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -30,9 +31,7 @@ APP = os.path.join(ROOT, "app")
 
 app = FastAPI(title="Cricket Score Predictor")
 
-# The page is a plain static file; every number it shows comes from the API.
-INDEX_HTML = open(os.path.join(APP, "templates", "index.html"),
-                  encoding="utf-8").read()
+STATIC = os.path.join(APP, "static")
 
 main_model = lgb.Booster(model_file=os.path.join(MODELS, "lgb_main.txt"))
 meta = json.load(open(os.path.join(MODELS, "meta.json")))
@@ -278,11 +277,6 @@ async def readable_validation_error(request: Request, exc: RequestValidationErro
                                  "errors": errors})
 
 
-@app.get("/", response_class=HTMLResponse)
-def index():
-    return HTMLResponse(INDEX_HTML)
-
-
 @app.get("/api/meta")
 def api_meta():
     return {
@@ -490,3 +484,11 @@ def api_replay(rid: str):
         "high": [round(float(x), 1) for x in hi],
         "mae": round(float(np.mean(np.abs(point - final))), 2),
     }
+
+
+# Mounted last, and only after every /api route is registered. Starlette
+# matches routes in the order they were added, so a mount at "/" placed here
+# cannot shadow the API; placed above, it would swallow all of it.
+# html=True serves static/index.html for "/" and resolves extensionless paths,
+# which is what makes /predict.html and friends work as plain files.
+app.mount("/", StaticFiles(directory=STATIC, html=True), name="site")
