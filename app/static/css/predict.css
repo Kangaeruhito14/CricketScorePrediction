@@ -1,0 +1,343 @@
+/* ==========================================================================
+   predict.css — layout for the prediction page: the three sections, the team
+   swap, the overs pair, the result, and the history panel.
+   Loaded only by predict.html. Every value comes from tokens.css.
+   ========================================================================== */
+
+/* The form and its history sit side by side once there is room; below that
+   the history drops underneath, after the form in both source and view. */
+.predict-layout {
+  display: grid;
+  gap: var(--sp-6);
+  align-items: start;
+  padding-bottom: var(--sp-8);
+}
+
+@media (min-width: 68rem) {
+  .predict-layout { grid-template-columns: minmax(0, 1fr) 21rem; gap: var(--sp-7); }
+  /* The history follows the page rather than scrolling away from it. */
+  .history { position: sticky; top: calc(var(--header-h) + var(--sp-4)); }
+}
+
+.predict-form { display: grid; gap: var(--sp-6); min-width: 0; }
+
+/* ==========================================================================
+   Sections
+   Numbered because the form genuinely is a sequence: you cannot describe a
+   live state before saying which match it is, and there is no result until
+   both are given.
+   ========================================================================== */
+.section {
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--r-4);
+  overflow: hidden;
+}
+
+.section__head {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--sp-4);
+  align-items: start;
+  padding: var(--sp-5);
+  background: var(--bg-sunken);
+  border-bottom: 1px solid var(--line);
+}
+
+.section__num {
+  font-family: var(--font-mono);
+  font-size: var(--step-1);
+  font-weight: var(--wt-medium);
+  color: var(--predict);
+  line-height: 1.1;
+}
+
+.section__title {
+  font-family: var(--font-display);
+  font-size: var(--step-2);
+  font-weight: var(--wt-bold);
+  letter-spacing: var(--track-tight);
+  line-height: var(--lh-snug);
+}
+
+.section__note {
+  margin-top: var(--sp-2);
+  font-size: var(--step--1);
+  color: var(--text-muted);
+  line-height: var(--lh-normal);
+}
+
+.section__body { padding: var(--sp-5); display: grid; gap: var(--sp-5); }
+
+@media (min-width: 48rem) {
+  .section__head, .section__body { padding: var(--sp-6); }
+  .section__body { gap: var(--sp-6); }
+}
+
+.form-actions { margin-top: var(--sp-2); gap: var(--sp-4); }
+
+/* ==========================================================================
+   Batting / bowling with the swap between them
+   ========================================================================== */
+.teams {
+  display: grid;
+  gap: var(--sp-3);
+  grid-template-columns: 1fr;
+}
+
+/* Below 48rem the button sits under the two fields, full width of the swap
+   cell, so it is never squeezed between two labels on a phone. */
+.teams__swap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@media (min-width: 48rem) {
+  .teams {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: var(--sp-4);
+    align-items: end;
+  }
+  /* Sits level with the two inputs rather than with their labels. */
+  .teams__swap { padding-bottom: 0; height: 44px; }
+}
+
+/* ==========================================================================
+   Overs: two integers, plus the notation they add up to
+   ========================================================================== */
+.overs {
+  display: grid;
+  gap: var(--sp-4);
+  grid-template-columns: 1fr 1fr;
+  align-items: start;
+}
+
+@media (min-width: 40rem) {
+  .overs { grid-template-columns: 1fr 1fr minmax(0, 1.4fr); }
+}
+
+/* "Overs completed" wraps to two lines where "Balls this over" does not, which
+   left the two inputs sitting at different heights. Reserving two lines for
+   both labels keeps them level without shortening either name. */
+@media (max-width: 39.99rem) {
+  /* Exactly two lines of this label's own type, derived from the line-height
+     token rather than guessed - 2.6em measured 31px against a wrapped label's
+     37px and left the inputs 6px out. */
+  .overs > .field > .field__label { min-height: calc(2 * var(--lh-normal) * 1em); }
+}
+
+.overs__reads {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  grid-column: 1 / -1;
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--bg-sunken);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r-2);
+}
+
+@media (min-width: 40rem) {
+  .overs__reads { grid-column: auto; }
+}
+
+.overs__value {
+  font-size: var(--step-2);
+  font-weight: var(--wt-medium);
+  color: var(--predict);
+  font-variant-numeric: tabular-nums;
+}
+
+.overs__left { line-height: var(--lh-normal); }
+
+/* ==========================================================================
+   Result
+   ========================================================================== */
+.section--result { border-color: var(--predict-line); }
+
+.result__headline {
+  text-align: center;
+  padding-block: var(--sp-4) var(--sp-5);
+}
+
+.result__headline .score {
+  /* The single most prominent thing on the page. */
+  margin-block: var(--sp-2) var(--sp-4);
+}
+
+.result__band {
+  font-size: var(--step-1);
+  color: var(--text-muted);
+  line-height: var(--lh-normal);
+}
+
+.result__band b {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--predict);
+}
+
+/* Four supporting figures that belong on one row wherever they fit. At the
+   default 11rem minimum they broke 3 + 1, leaving the fourth stranded under
+   a gap. */
+.result__facts {
+  margin-top: var(--sp-6);
+  grid-template-columns: repeat(auto-fit, minmax(min(9rem, 100%), 1fr));
+  align-items: start;
+}
+
+/* Supporting context, set well below the projection so it never competes
+   with it, and never broken across lines - "8.23" wrapping to "8.2 / 3" is
+   worse than a slightly narrower column. */
+.result__facts .stat__value { font-size: var(--step-2); white-space: nowrap; }
+
+/* "At the current rate" wraps where the other three labels do not, which
+   dropped its figure below the row. Two lines are reserved for all four so
+   the numbers stay on one line together, without shortening any label. */
+.result__facts .stat__label { min-height: calc(2 * var(--lh-normal) * 1em); }
+.result__facts .stat__note { margin-top: var(--sp-1); font-size: var(--step--1); color: var(--text-faint); }
+.result [data-verdict] { margin-top: var(--sp-6); }
+
+/* ==========================================================================
+   History
+   A disclosure on every width. On desktop it is open and pinned; on a phone
+   it collapses so it never buries the form under a list.
+   ========================================================================== */
+.history { min-width: 0; }
+
+.history__box {
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--r-4);
+  overflow: hidden;
+}
+
+.history__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-5);
+  cursor: pointer;
+  background: var(--bg-sunken);
+  border-bottom: 1px solid transparent;
+  list-style: none;
+}
+
+.history__summary::-webkit-details-marker { display: none; }
+.history__box[open] .history__summary { border-bottom-color: var(--line); }
+.history__summary:hover { color: var(--predict); }
+
+.history__heading {
+  font-family: var(--font-display);
+  font-size: var(--step-0);
+  font-weight: var(--wt-bold);
+  letter-spacing: var(--track-tight);
+}
+
+/* A chevron that turns, so the control reads as a disclosure and not a
+   heading that happens to be clickable. */
+.history__summary::after {
+  content: '';
+  width: 9px;
+  height: 9px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  margin-left: auto;
+  margin-right: var(--sp-1);
+  transition: transform var(--dur-2) var(--ease);
+}
+
+.history__box[open] .history__summary::after { transform: rotate(-135deg); }
+.history__summary .badge { margin-left: 0; }
+
+.history__body { padding: var(--sp-4); display: grid; gap: var(--sp-4); }
+.history__note { line-height: var(--lh-normal); }
+
+.history__list {
+  display: grid;
+  gap: var(--sp-2);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: min(28rem, 60dvh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.history__item { position: relative; display: flex; align-items: stretch; }
+
+.history__load {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+  text-align: left;
+  padding: var(--sp-3);
+  padding-right: var(--sp-7);
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+  background: var(--bg-sunken);
+  cursor: pointer;
+  transition: border-color var(--dur-2) var(--ease),
+              background-color var(--dur-2) var(--ease);
+}
+
+.history__load:hover { border-color: var(--predict); background: var(--predict-soft); }
+
+.history__score {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  font-family: var(--font-display);
+  font-size: var(--step-2);
+  font-weight: var(--wt-black);
+  line-height: 1.05;
+  color: var(--predict);
+  font-variant-numeric: tabular-nums;
+}
+
+.history__band {
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  font-weight: var(--wt-normal);
+  color: var(--text-faint);
+}
+
+.history__teams {
+  font-size: var(--step--1);
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history__meta {
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  color: var(--text-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history__delete {
+  position: absolute;
+  right: var(--sp-2);
+  top: var(--sp-2);
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-2);
+  color: var(--text-faint);
+  font-size: var(--step-1);
+  line-height: 1;
+  cursor: pointer;
+  transition: color var(--dur-2) var(--ease), background-color var(--dur-2) var(--ease);
+}
+
+.history__delete:hover { color: var(--warn); background: var(--warn-soft); }
