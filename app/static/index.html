@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cricket Score Predictor</title>
-<meta name="description" content="Predict the final score of a cricket innings from its live state, across T20, ODI and multi-day formats.">
+<meta name="description" content="Tell it where a cricket innings has got to and it projects the final score, with the range it expects around it. One model across T20, ODI and multi-day cricket.">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -46,136 +46,216 @@
 
 <main id="main" class="page__main">
 
-  <!-- PHASE 2 SPECIMEN.
-       This block exists so the design system can be checked in a browser at
-       every breakpoint before any page is built on it. Phase 3 replaces it
-       with the real hero and headline metrics. -->
+  <!-- ================= HERO ================= -->
+  <section class="band hero">
+    <div class="shell hero__grid">
+      <div>
+        <span class="eyebrow">Innings projection · every format</span>
+        <h1 class="hero__title">What will they finish&nbsp;on?</h1>
+        <p class="hero__lede">
+          Give it the state of a cricket innings — the score, the wickets, how
+          many overs have gone — and it projects the total the batting side
+          will end up with, along with the range it expects around that number.
+        </p>
+        <div class="row hero__actions">
+          <a class="btn btn--primary btn--lg" href="/predict.html">Make a prediction</a>
+          <a class="btn btn--secondary btn--lg" href="/replay.html">Watch a real innings</a>
+        </div>
+      </div>
+
+      <!-- A live call to the same endpoint the prediction page uses. The match
+           state is an illustration; the projection is not. -->
+      <div class="card card--predict" data-example hidden>
+        <!-- Every value below is written by home.js from the same object it
+             posts to /api/predict, so the caption cannot describe a different
+             match from the one that produced the number. -->
+        <div class="row row--between" style="margin-bottom: var(--sp-4)">
+          <span class="badge badge--predict">Worked example</span>
+          <span class="scoreline small" data-fill="ex-teams">—</span>
+        </div>
+
+        <p class="scoreline" style="font-size: var(--step-2)">
+          <b data-fill="ex-state">—</b> <span data-fill="ex-overs">—</span>
+        </p>
+        <p class="small faint" style="margin-top: var(--sp-1)" data-fill="ex-where">—</p>
+
+        <p class="score__caption" style="margin-top: var(--sp-5)">Projected final score</p>
+        <strong class="score" data-fill="ex-score">—</strong>
+
+        <figure class="rail">
+          <div class="rail__scale" role="img"
+               aria-label="The projected score sits inside an eighty per cent interval, shown against a flat run-rate extrapolation.">
+            <div class="rail__band"></div>
+            <div class="rail__naive"></div>
+            <div class="rail__point"></div>
+          </div>
+          <div class="rail__ends">
+            <span data-fill="ex-min">—</span>
+            <span data-fill="ex-max">—</span>
+          </div>
+          <figcaption class="rail__legend">
+            <span class="rail__key">Projection <b data-fill="ex-score">—</b></span>
+            <span class="rail__key rail__key--band"><span data-fill="nominal">—</span> band <b data-fill="ex-low">—</b>–<b data-fill="ex-high">—</b></span>
+            <span class="rail__key rail__key--naive">At the current rate <b data-fill="ex-naive">—</b></span>
+          </figcaption>
+        </figure>
+
+        <hr class="divider" style="margin-block: var(--sp-5)">
+
+        <dl class="facts facts--tight">
+          <div><dt class="stat__label">Run rate</dt><dd class="num" data-fill="ex-crr">—</dd></div>
+          <div><dt class="stat__label">Balls left</dt><dd class="num" data-fill="ex-balls">—</dd></div>
+          <div><dt class="stat__label">Venue par</dt><dd class="num" data-fill="ex-par">—</dd></div>
+        </dl>
+      </div>
+
+      <p class="callout callout--warn" data-example-failed hidden>
+        The worked example could not be produced right now. The prediction tool
+        still works — <a href="/predict.html">try it directly</a>.
+      </p>
+    </div>
+  </section>
+
+  <!-- ================= SCALE ================= -->
+  <section class="band band--tight band--deep">
+    <div class="shell">
+      <dl class="facts">
+        <div>
+          <dt class="stat__label">Matches</dt>
+          <dd class="stat__value num skeleton" data-fill="matches">00,000</dd>
+        </div>
+        <div>
+          <dt class="stat__label">Innings</dt>
+          <dd class="stat__value num skeleton" data-fill="innings">00,000</dd>
+        </div>
+        <div>
+          <dt class="stat__label">Deliveries</dt>
+          <dd class="stat__value num skeleton" data-fill="deliveries">00.0 million</dd>
+        </div>
+        <div>
+          <dt class="stat__label">Formats, one model</dt>
+          <dd class="stat__value num skeleton" data-fill="formats">0</dd>
+        </div>
+      </dl>
+      <p class="small faint" style="margin-top: var(--sp-4)">
+        Ball-by-ball records from Cricsheet, <span class="skeleton" data-fill="date-range">covering a range of dates</span>.
+      </p>
+      <p class="callout callout--warn" data-error hidden style="margin-top: var(--sp-4)"></p>
+    </div>
+  </section>
+
+  <!-- ================= HOW WELL ================= -->
   <section class="band">
     <div class="shell">
       <div class="band__head">
-        <span class="eyebrow">Design system</span>
-        <h1>Every component, one page</h1>
-        <p>Type scale, colour, spacing and controls, so the system can be checked at 320&nbsp;px before a page is built on it.</p>
+        <span class="eyebrow">How well it does</span>
+        <h2>There is no single accuracy number</h2>
+        <p>
+          A T20 innings ends near 170; a Test innings can pass 500. An average
+          error of 30 runs would be poor in one and excellent in the other, so
+          quoting one figure across all of them would flatter the short formats
+          and libel the long ones. Read each row on its own.
+        </p>
       </div>
 
-      <div class="stack--loose stack">
-        <div>
-          <h3>Type scale</h3>
-          <div class="stack--tight stack" style="margin-top: var(--sp-4)">
-            <div style="font-family: var(--font-display); font-size: var(--step-5); font-weight: 800; line-height: 1.02; letter-spacing: -0.02em">Display 5</div>
-            <div style="font-family: var(--font-display); font-size: var(--step-4); font-weight: 700; line-height: 1.02">Display 4</div>
-            <div style="font-family: var(--font-display); font-size: var(--step-3); font-weight: 700">Display 3</div>
-            <div style="font-size: var(--step-1)">Body large — the model reads the live state of an innings and returns a final score.</div>
-            <div style="font-size: var(--step-0)">Body — 21,719 matches, 46,761 innings, 11.3 million deliveries.</div>
-            <div class="small faint">Small — the smallest text on the site is 12&nbsp;px.</div>
-            <div class="mono num">Mono tabular — 184/6 (17.3) · 11.4 · 120</div>
-          </div>
+      <div class="table-wrap" style="max-width: 46rem">
+        <div class="scroll-x">
+          <table class="data">
+            <caption>
+              Average error on matches played after
+              <span class="skeleton" data-fill="test-start">a later date</span> —
+              a period the model never saw during training.
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Format</th>
+                <th scope="col" class="n">Test rows</th>
+                <th scope="col" class="n">Typical error</th>
+                <th scope="col" class="n">R²</th>
+              </tr>
+            </thead>
+            <tbody data-format-rows>
+              <tr><td class="skeleton">Loading</td><td class="n skeleton">0</td><td class="n skeleton">0</td><td class="n skeleton">0</td></tr>
+            </tbody>
+          </table>
         </div>
+      </div>
+    </div>
+  </section>
 
-        <div>
-          <h3>Colour</h3>
-          <div class="grid grid--narrow" style="margin-top: var(--sp-4)">
-            <div class="card card--predict"><div class="stat stat--predict"><span class="stat__value num">175</span><span class="stat__label">Prediction</span><span class="stat__note">Aqua is always what the model says.</span></div></div>
-            <div class="card card--actual"><div class="stat stat--actual"><span class="stat__value num">184</span><span class="stat__label">Actual</span><span class="stat__note">Amber is always what happened.</span></div></div>
-            <div class="card card--warn"><div class="stat stat--warn"><span class="stat__value num">+9</span><span class="stat__label">Warning</span><span class="stat__note">Coral for errors and wickets.</span></div></div>
-          </div>
-        </div>
+  <!-- ================= WHAT MAKES IT UNUSUAL ================= -->
+  <section class="band band--deep">
+    <div class="shell">
+      <div class="band__head">
+        <span class="eyebrow">Three things worth knowing</span>
+        <h2>Why this is not the usual score predictor</h2>
+      </div>
 
-        <div>
-          <h3>Buttons</h3>
-          <div class="row" style="margin-top: var(--sp-4)">
-            <button class="btn btn--primary btn--lg" type="button">Predict final score</button>
-            <button class="btn btn--primary" type="button">Primary</button>
-            <button class="btn btn--secondary" type="button">Secondary</button>
-            <button class="btn btn--ghost" type="button">Ghost</button>
-            <button class="btn btn--danger btn--sm" type="button">Clear all</button>
-            <button class="btn btn--primary" type="button" disabled>Disabled</button>
-            <button class="btn btn--icon" type="button" aria-label="Swap batting and bowling team">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 16V4m0 0L3 8m4-4 4 4"/><path d="M17 8v12m0 0 4-4m-4 4-4-4"/></svg>
-            </button>
-          </div>
-        </div>
+      <div class="grid grid--2">
+        <article class="card card--predict">
+          <h3 class="card__title">Every format, one model</h3>
+          <p class="card__body">
+            Most score predictors handle T20 only. This one covers T20, ODI and
+            multi-day cricket together, by giving the model how far through the
+            innings it is rather than how many overs have gone. A T20 at ball 60
+            and an ODI at ball 150 are both halfway, and the model can see that.
+            Multi-day innings have no ball limit at all, so they take their own
+            branch.
+          </p>
+        </article>
 
-        <div>
-          <h3>Fields</h3>
-          <div class="field-group" style="margin-top: var(--sp-4)">
-            <div class="field">
-              <label class="field__label" for="spec-a">Overs completed</label>
-              <input class="input num" id="spec-a" type="number" value="11" min="0">
-              <span class="field__hint">Whole overs bowled.</span>
-            </div>
-            <div class="field" data-invalid="true">
-              <label class="field__label" for="spec-b">Balls this over</label>
-              <input class="input num" id="spec-b" type="number" value="7" min="0" max="5" aria-describedby="spec-b-err" aria-invalid="true">
-              <span class="field__error" id="spec-b-err">An over has six legal balls, so this must be 0–5.</span>
-            </div>
-            <div class="field">
-              <label class="field__label" for="spec-c">Venue</label>
-              <div class="combobox" data-open="false">
-                <input class="input combobox__input" id="spec-c" type="text" value="Sydney Cricket Ground" role="combobox" aria-expanded="false" aria-controls="spec-lb" autocomplete="off">
-                <span class="combobox__toggle" aria-hidden="true">
-                  <svg viewBox="0 0 12 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m1 1.5 5 5 5-5"/></svg>
-                </span>
-                <ul class="combobox__listbox" id="spec-lb" role="listbox" aria-label="Venue"></ul>
-              </div>
-              <span class="field__hint">Search by ground or city.</span>
-            </div>
-          </div>
-        </div>
+        <article class="card card--predict">
+          <h3 class="card__title">Nothing is scored against its own future</h3>
+          <p class="card__body">
+            Every ball of one innings shares the same answer, so splitting the
+            data at random lets the model memorise instead of predict. It is
+            trained on the past and tested on matches played later, and every
+            piece of context — a ground's par score, a side's recent form —
+            counts only matches that had already happened. The
+            <a href="/results.html">results page</a> shows what that honesty
+            costs.
+          </p>
+        </article>
 
-        <div>
-          <h3>Combobox, open</h3>
-          <div style="max-width: 26rem; margin-top: var(--sp-4)">
-            <div class="combobox" data-open="true">
-              <input class="input combobox__input" type="text" value="sydney" role="combobox" aria-expanded="true" aria-controls="spec-lb2" aria-label="Venue search" autocomplete="off">
-              <!-- The listbox is pinned open and in flow so the open state can
-                   be inspected; that makes the container tall, so the toggle
-                   is anchored to the input rather than centred on it. -->
-              <span class="combobox__toggle" aria-hidden="true" style="top: 22px; transform: none">
-                <svg viewBox="0 0 12 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m1 1.5 5 5 5-5"/></svg>
-              </span>
-              <ul class="combobox__listbox" id="spec-lb2" role="listbox" aria-label="Venue" style="position: static; max-height: none; box-shadow: none; margin-top: var(--sp-2)">
-                <li class="combobox__option" role="option" aria-selected="true" data-active="true"><span><mark>Sydney</mark> Cricket Ground</span><span class="combobox__meta">Sydney</span></li>
-                <li class="combobox__option" role="option" aria-selected="false"><span>Stadium Australia</span><span class="combobox__meta"><mark>Sydney</mark></span></li>
-                <li class="combobox__option" role="option" aria-selected="false"><span>Bankstown Oval</span><span class="combobox__meta"><mark>Sydney</mark></span></li>
-                <li class="combobox__option" role="option" aria-selected="false"><span>North Sydney Oval</span><span class="combobox__meta">Sydney</span></li>
-              </ul>
-            </div>
-          </div>
-        </div>
+        <article class="card card--predict">
+          <h3 class="card__title">The range is checked, not claimed</h3>
+          <p class="card__body">
+            Every projection comes with an 80% band. That band is calibrated
+            against held-out matches and then measured: it currently contains
+            the true final score
+            <b data-fill="coverage" class="skeleton">00%</b> of the time
+            against a target of <b data-fill="nominal" class="skeleton">00%</b>.
+            A stated interval nobody checked is worth nothing.
+          </p>
+        </article>
+      </div>
+    </div>
+  </section>
 
-        <div>
-          <h3>Table</h3>
-          <div class="table-wrap" style="margin-top: var(--sp-4)">
-            <div class="scroll-x">
-              <table class="data">
-                <caption>Error scales with how many runs a format produces. Read each row on its own.</caption>
-                <thead><tr><th scope="col">Format</th><th scope="col" class="n">Rows</th><th scope="col" class="n">MAE</th><th scope="col" class="n">RMSE</th><th scope="col" class="n">R²</th></tr></thead>
-                <tbody>
-                  <tr><td>T20</td><td class="n">498,777</td><td class="n">15.57</td><td class="n">21.83</td><td class="n">0.759</td></tr>
-                  <tr><td>ODI</td><td class="n">215,429</td><td class="n">32.47</td><td class="n">44.72</td><td class="n">0.500</td></tr>
-                  <tr><td>Multi-day</td><td class="n">233,992</td><td class="n">61.31</td><td class="n">84.70</td><td class="n">0.589</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <h3>Badges, callouts, states</h3>
-          <div class="row" style="margin-top: var(--sp-4)">
-            <span class="badge">T20</span>
-            <span class="badge badge--predict">Prediction</span>
-            <span class="badge badge--actual">Actual</span>
-            <span class="badge badge--warn">Leaky split</span>
-          </div>
-          <div class="stack" style="margin-top: var(--sp-4)">
-            <div class="callout"><strong>Every context feature is as-of-date.</strong> A venue's par score counts only matches played before the one being predicted.</div>
-            <div class="callout callout--warn"><strong>The flattering number is the wrong one.</strong> A random split puts ball 12.3 in train and ball 12.4 in test.</div>
-            <div class="empty-state"><strong>No predictions yet</strong>Make one and it will be saved here.</div>
-            <p class="skeleton" style="max-width: 22rem">Loading placeholder</p>
-          </div>
-        </div>
+  <!-- ================= CTA ================= -->
+  <section class="band">
+    <div class="shell">
+      <div class="band__head">
+        <span class="eyebrow">Where to go next</span>
+        <h2>Try it</h2>
+      </div>
+      <div class="grid grid--2">
+        <a class="link-card" href="/predict.html">
+          <span class="link-card__title">Predict a score</span>
+          <p>Set up a match, enter where the innings has got to, and see the projection with its range and the context behind it.</p>
+        </a>
+        <a class="link-card" href="/replay.html">
+          <span class="link-card__title">Replay a real innings</span>
+          <p>Step through a completed innings ball by ball and watch the projection move as wickets fall and boundaries go.</p>
+        </a>
+        <a class="link-card" href="/results.html">
+          <span class="link-card__title">Read the evaluation</span>
+          <p>Error by format and by stage of the innings, interval calibration, and what a leaky split would have claimed instead.</p>
+        </a>
+        <a class="link-card" href="/about.html">
+          <span class="link-card__title">How it works</span>
+          <p>The data, how the features avoid seeing the future, and an honest list of what the model cannot know.</p>
+        </a>
       </div>
     </div>
   </section>
@@ -212,5 +292,7 @@
 </footer>
 
 <script src="/js/nav.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/home.js"></script>
 </body>
 </html>
