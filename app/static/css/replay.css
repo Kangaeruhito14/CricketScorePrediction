@@ -1,0 +1,362 @@
+/* ==========================================================================
+   replay.css — the match picker, the ball-by-ball chart, the readout panel,
+   the playback controls and the key-moments table.
+   Loaded only by replay.html. Every value comes from tokens.css.
+   ========================================================================== */
+
+/* minmax(0, 1fr) rather than a bare 1fr: a grid item defaults to
+   min-width:auto, so the moments table's intrinsic width sized the single
+   column to 693px inside a 375px page and scrolled the whole document
+   sideways. The explicit zero minimum caps the column at the container. */
+.replay-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sp-6);
+  padding-bottom: var(--sp-8);
+}
+
+.replay-layout > * { min-width: 0; }
+
+/* ==========================================================================
+   Picker
+   ========================================================================== */
+.picker__fields {
+  display: grid;
+  gap: var(--sp-4);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 48rem) {
+  .picker__fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .picker__fields .picker__match { grid-column: 1 / -1; }
+}
+
+@media (min-width: 68rem) {
+  .picker__fields { grid-template-columns: 12rem minmax(0, 1fr) minmax(0, 1.4fr); }
+  .picker__fields .picker__match { grid-column: auto; }
+}
+
+/* ==========================================================================
+   Summary strip
+   ========================================================================== */
+.summary {
+  display: grid;
+  gap: var(--sp-4) var(--sp-5);
+  grid-template-columns: repeat(auto-fit, minmax(min(8.5rem, 100%), 1fr));
+  padding: var(--sp-5);
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--r-3);
+  align-items: start;
+}
+
+.summary dt {
+  font-family: var(--font-display);
+  font-size: var(--step--1);
+  font-weight: var(--wt-semi);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: var(--sp-1);
+  /* Two of these labels wrap where the others do not; reserving the space
+     keeps every figure on one line together. */
+  min-height: calc(2 * var(--lh-normal) * 1em);
+}
+
+.summary dd {
+  margin: 0;
+  font-size: var(--step-0);
+  line-height: var(--lh-snug);
+  overflow-wrap: break-word;
+}
+
+.summary dd.n {
+  font-family: var(--font-display);
+  font-size: var(--step-2);
+  font-weight: var(--wt-black);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--track-tight);
+}
+
+.summary .is-actual { color: var(--actual); }
+.summary .is-predict { color: var(--predict); }
+
+/* ==========================================================================
+   Chart and readout
+   ========================================================================== */
+.replay-main { display: grid; gap: var(--sp-5); align-items: start; }
+
+@media (min-width: 68rem) {
+  .replay-main { grid-template-columns: minmax(0, 1fr) 22rem; }
+}
+
+.chart-card {
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--r-3);
+  padding: var(--sp-4);
+  min-width: 0;
+}
+
+.chart {
+  position: relative;
+  margin: 0;
+  /* The cursor follows the pointer horizontally, so the whole plot is a
+     target rather than each individual point. */
+  cursor: crosshair;
+  touch-action: pan-y;
+}
+
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+
+/* Chart styling lives here, not on the SVG nodes: a presentation attribute
+   such as stroke="var(--predict)" is not substituted, so the whole plot would
+   have drawn in the browser's defaults and ignored the theme entirely. */
+.ch-grid { stroke: var(--line-soft); stroke-width: 1; }
+
+/* 12px, the same floor the rest of the site holds to. Axis ticks are often
+   set smaller than that, but there is no reason for this chart's to be the
+   only text on the site that breaks the rule. */
+.ch-tick {
+  fill: var(--text-faint);
+  font-size: 12px;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.ch-band { fill: color-mix(in srgb, var(--predict) 18%, transparent); stroke: none; }
+
+.ch-final {
+  stroke: var(--actual);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 4;
+  opacity: 0.75;
+}
+
+.ch-wicket { stroke: var(--warn); stroke-width: 2; stroke-linecap: round; }
+
+.ch-line { fill: none; stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+.ch-pred { stroke: var(--predict); }
+.ch-score { stroke: var(--actual); }
+
+.ch-cursor-line { stroke: var(--text-faint); stroke-width: 1; stroke-dasharray: 3 3; }
+.ch-dot { stroke: var(--bg-raised); stroke-width: 2; }
+.ch-dot--pred { fill: var(--predict); }
+.ch-dot--score { fill: var(--actual); }
+.chart:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; border-radius: var(--r-2); }
+
+.chart__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-4);
+  margin-top: var(--sp-3);
+  font-size: var(--step--1);
+  color: var(--text-muted);
+}
+
+.chart__key { display: inline-flex; align-items: center; gap: var(--sp-2); }
+
+.chart__key::before {
+  content: '';
+  width: 14px;
+  height: 3px;
+  border-radius: var(--r-pill);
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.chart__key--pred { color: var(--predict); }
+.chart__key--actual { color: var(--actual); }
+.chart__key--band::before { height: 10px; background: color-mix(in srgb, var(--predict) 32%, transparent); border: 1px solid var(--predict); }
+.chart__key--final::before { background: repeating-linear-gradient(90deg, var(--actual) 0 4px, transparent 4px 7px); }
+.chart__key--wicket::before { width: 3px; height: 12px; background: var(--warn); }
+
+/* ---- controls ---- */
+.controls {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--sp-3) var(--sp-4);
+  align-items: center;
+  margin-top: var(--sp-4);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--line-soft);
+}
+
+.controls__scrub { display: flex; align-items: center; gap: var(--sp-3); min-width: 0; }
+
+/* A native range input: it is keyboard accessible, it is a scrubber
+   everywhere, and nothing custom would behave better. */
+.controls input[type='range'] {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 28px;
+  background: transparent;
+  appearance: none;
+  cursor: pointer;
+}
+
+.controls input[type='range']::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: var(--r-pill);
+  background: var(--bg-sunken);
+  border: 1px solid var(--line-strong);
+}
+
+.controls input[type='range']::-moz-range-track {
+  height: 6px;
+  border-radius: var(--r-pill);
+  background: var(--bg-sunken);
+  border: 1px solid var(--line-strong);
+}
+
+.controls input[type='range']::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -7px;
+  border-radius: var(--r-pill);
+  background: var(--predict);
+  border: 2px solid var(--bg-raised);
+  box-shadow: var(--shadow-1);
+}
+
+.controls input[type='range']::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: var(--r-pill);
+  background: var(--predict);
+  border: 2px solid var(--bg-raised);
+}
+
+.controls input[type='range']:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+
+.controls__count {
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  color: var(--text-muted);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   Readout panel
+   A panel, not a tooltip: it holds still, it has room, and it is readable
+   while the pointer is somewhere else entirely.
+   ========================================================================== */
+.readout {
+  background: var(--bg-raised);
+  border: 1px solid var(--predict-line);
+  border-top: 3px solid var(--predict);
+  border-radius: var(--r-3);
+  padding: var(--sp-5);
+  display: grid;
+  gap: var(--sp-4);
+  min-width: 0;
+}
+
+@media (min-width: 68rem) {
+  .readout { position: sticky; top: calc(var(--header-h) + var(--sp-4)); }
+}
+
+.readout__ball {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+
+.readout__over {
+  font-family: var(--font-mono);
+  font-size: var(--step-2);
+  font-weight: var(--wt-medium);
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.readout__state {
+  font-family: var(--font-display);
+  font-size: var(--step-3);
+  font-weight: var(--wt-black);
+  letter-spacing: var(--track-tight);
+  font-variant-numeric: tabular-nums;
+  color: var(--actual);
+}
+
+.readout__block { display: grid; gap: var(--sp-1); }
+
+.readout__label {
+  font-family: var(--font-display);
+  font-size: var(--step--1);
+  font-weight: var(--wt-semi);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.readout__pred {
+  font-family: var(--font-display);
+  font-size: var(--step-4);
+  font-weight: var(--wt-black);
+  line-height: 1;
+  letter-spacing: var(--track-tight);
+  font-variant-numeric: tabular-nums;
+  color: var(--predict);
+}
+
+.readout__band, .readout__gap {
+  font-family: var(--font-mono);
+  font-size: var(--step-0);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+.readout__gap b { font-weight: var(--wt-semi); }
+.readout__gap.is-over b { color: var(--warn); }
+.readout__gap.is-under b { color: var(--warn); }
+.readout__gap.is-close b { color: var(--predict); }
+
+.readout__note {
+  font-size: var(--step--1);
+  line-height: var(--lh-loose);
+  color: var(--text-muted);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--line-soft);
+  /* The sentence changes length as the cursor moves; a floor stops the panel
+     jumping every time it does. */
+  min-height: 7.5em;
+}
+
+.readout__flags { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+
+/* ==========================================================================
+   Key moments
+   ========================================================================== */
+.moments__type {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  white-space: nowrap;
+}
+
+.moments__type::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: var(--r-pill);
+  flex-shrink: 0;
+  background: var(--text-faint);
+}
+
+.moments__type[data-kind='Wicket']::before { background: var(--warn); }
+.moments__type[data-kind='Six']::before { background: var(--actual); }
+.moments__type[data-kind='Four']::before { background: var(--actual-line); }
+.moments__type[data-kind='Big move']::before { background: var(--predict); }
+
+td .delta { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+td .delta[data-dir='up'] { color: var(--predict); }
+td .delta[data-dir='down'] { color: var(--warn); }
+
+/* The row matching the cursor, so the table and the chart agree on where
+   you are. */
+tr[data-current='true'] td { background: var(--predict-soft); }
