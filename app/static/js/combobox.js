@@ -9,9 +9,12 @@
        <button class="combobox__toggle" type="button" tabindex="-1">
        <ul class="combobox__listbox" role="listbox">
 
-   Items are {value, label, meta}. `meta` is searched as well as shown, which
-   is what lets a venue be found by its city: typing "sydney" surfaces
-   Stadium Australia, whose name does not contain the word.  */
+   Items are {value, label, meta, search}. `meta` is searched as well as
+   shown, which is what lets a venue be found by its city: typing "sydney"
+   surfaces Stadium Australia, whose name does not contain the word. `search`
+   adds terms that are matched but never displayed - the replay picker uses it
+   so an innings can be found by ground, city or competition without printing
+   all four on every row.  */
 (function (global) {
   'use strict';
 
@@ -277,7 +280,9 @@
     const searching = q && q !== normalise(this.labelFor(this.value));
 
     this.filtered = !searching ? this.items.slice() : this.items.filter(function (i) {
-      return normalise(i.label).indexOf(q) >= 0 || normalise(i.meta).indexOf(q) >= 0;
+      return normalise(i.label).indexOf(q) >= 0
+        || normalise(i.meta).indexOf(q) >= 0
+        || normalise(i.search).indexOf(q) >= 0;
     });
 
     const shown = this.filtered.slice(0, MAX_RENDER);
