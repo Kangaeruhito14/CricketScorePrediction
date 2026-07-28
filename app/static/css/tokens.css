@@ -1,0 +1,252 @@
+/* ==========================================================================
+   tokens.css — the only file allowed to name a colour, a size or a duration.
+   Everything downstream reads these custom properties.
+
+   Direction: a floodlit night match. The base is a deep blue-violet rather
+   than a neutral charcoal, because a cricket ground under lights is blue, not
+   grey. Two accents carry the product's central distinction and both are
+   load-bearing: aqua is always what the model says, amber is always what
+   actually happened. That pair sits on the blue-orange axis on purpose - it
+   stays distinguishable under protanopia and deuteranopia, where the obvious
+   prediction-vs-actual choice of red against green collapses into one colour.
+   ========================================================================== */
+
+:root {
+  /* ---- palette: raw values ---------------------------------------------
+     Named once here. Nothing outside this block should use a hex literal. */
+  --c-night-900: #080A14;   /* deepest - page behind everything */
+  --c-night-800: #0C0F1D;   /* page */
+  --c-night-700: #131728;   /* raised surface: cards, header */
+  --c-night-600: #1A1F35;   /* sunken: inputs, table stripes */
+  --c-night-500: #262C48;   /* borders */
+  --c-night-400: #3A4266;   /* strong borders, disabled text */
+
+  --c-aqua-400: #8AF0E2;
+  --c-aqua-500: #4FDCC6;    /* THE PREDICTION COLOUR */
+  --c-aqua-600: #17B49C;
+  --c-aqua-700: #0B7A6B;
+  --c-aqua-800: #06564B;
+
+  --c-amber-400: #FFCB7D;
+  --c-amber-500: #FFAE45;   /* THE ACTUAL-RESULT COLOUR */
+  --c-amber-600: #E2860B;
+  --c-amber-700: #9A5B00;
+
+  --c-coral-400: #FF9B9B;
+  --c-coral-500: #FF6B6B;   /* warnings, validation, wickets */
+  --c-coral-600: #D93A3A;
+  --c-coral-700: #A11E1E;
+
+  --c-paper-50: #FBFAF7;    /* light theme page - warm, not white */
+  --c-paper-100: #F2F0EA;
+  --c-paper-200: #E4E1D8;
+  --c-paper-300: #CFCBBE;
+
+  --c-slate-100: #EEF0FA;
+  --c-slate-300: #B3B9D4;
+  /* Measured against the worst surface it lands on, which is the aqua-tinted
+     active row of an open combobox (#1A2F3B), not the page. At #8990B0 that
+     pairing was 4.41:1 - just under AA. */
+  --c-slate-400: #979EC0;
+  --c-slate-600: #4A5170;
+  --c-slate-800: #22263A;
+  --c-slate-900: #14172A;
+
+  /* ---- semantic surface + text (dark is the canonical design) ---------- */
+  --bg: var(--c-night-800);
+  --bg-deep: var(--c-night-900);
+  --bg-raised: var(--c-night-700);
+  --bg-sunken: var(--c-night-600);
+  --bg-overlay: rgba(8, 10, 20, 0.82);
+
+  --line: var(--c-night-500);
+  --line-soft: var(--c-night-600);
+  --line-strong: var(--c-night-400);
+
+  --text: var(--c-slate-100);
+  --text-muted: var(--c-slate-300);
+  --text-faint: var(--c-slate-400);
+  --text-on-accent: var(--c-night-900);
+
+  /* ---- semantic accents ------------------------------------------------
+     -soft is a tint for backgrounds; -ink is the readable text version of
+     the same hue on the current surface. Both flip with the theme so a
+     component never has to know which theme it is in. */
+  --predict: var(--c-aqua-500);
+  --predict-ink: var(--c-aqua-400);
+  --predict-soft: rgba(79, 220, 198, 0.12);
+  --predict-line: rgba(79, 220, 198, 0.34);
+
+  --actual: var(--c-amber-500);
+  --actual-ink: var(--c-amber-400);
+  --actual-soft: rgba(255, 174, 69, 0.12);
+  --actual-line: rgba(255, 174, 69, 0.34);
+
+  --warn: var(--c-coral-500);
+  --warn-ink: var(--c-coral-400);
+  --warn-soft: rgba(255, 107, 107, 0.12);
+  --warn-line: rgba(255, 107, 107, 0.38);
+
+  --focus: var(--c-aqua-400);
+
+  /* ---- type ------------------------------------------------------------
+     Three roles. Archivo carries the display voice and is the only face that
+     uses a width axis - the big scoreboard numbers run expanded, the way a
+     broadcast score does. Plex Sans and Plex Mono are one designed
+     superfamily, so body prose and the fixed-width over notation share
+     proportions instead of merely coexisting. */
+  --font-display: 'Archivo', 'Archivo Expanded', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-body: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, monospace;
+
+  /* Fluid scale, 320px -> 1600px. Nothing resolves below 12px: the old page
+     set its labels at 11px and they were the first thing anyone complained
+     about. */
+  --step--1: clamp(0.75rem, 0.727rem + 0.114vw, 0.8125rem);
+  --step-0: clamp(0.9375rem, 0.915rem + 0.114vw, 1rem);
+  --step-1: clamp(1.0625rem, 1.017rem + 0.227vw, 1.1875rem);
+  --step-2: clamp(1.25rem, 1.136rem + 0.568vw, 1.5625rem);
+  --step-3: clamp(1.5rem, 1.273rem + 1.136vw, 2.125rem);
+  --step-4: clamp(1.875rem, 1.42rem + 2.27vw, 3.125rem);
+  --step-5: clamp(2.375rem, 1.58rem + 3.98vw, 4.5rem);
+  /* The predicted score. Must read from across a room at every width. */
+  --step-score: clamp(3.75rem, 1.7rem + 10.2vw, 9.5rem);
+
+  --lh-tight: 1.02;
+  --lh-snug: 1.18;
+  --lh-normal: 1.55;
+  --lh-loose: 1.7;
+
+  --track-tight: -0.02em;
+  --track-normal: 0;
+  --track-wide: 0.06em;
+  --track-caps: 0.14em;   /* eyebrows and column headers */
+
+  --wt-normal: 400;
+  --wt-medium: 500;
+  --wt-semi: 600;
+  --wt-bold: 700;
+  --wt-black: 800;
+
+  /* ---- spacing: 4px base ------------------------------------------------ */
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.5rem;
+  --sp-6: 2rem;
+  --sp-7: 3rem;
+  --sp-8: 4rem;
+  --sp-9: 6rem;
+  --sp-10: 8rem;
+
+  /* Vertical rhythm between full-bleed bands, and the page gutter. Both grow
+     with the viewport so a 320px phone is not given desktop breathing room
+     it cannot afford, and a 2560px display is not given phone margins. */
+  --band-y: clamp(2.5rem, 1.5rem + 5vw, 6rem);
+  --gutter: clamp(1rem, 0.6rem + 2vw, 2.5rem);
+
+  /* ---- layout ----------------------------------------------------------- */
+  --shell: 78rem;         /* 1248px - prose and forms */
+  --shell-wide: 100rem;   /* 1600px - evaluation tables */
+  --shell-prose: 46rem;   /* 736px - reading measure, ~70ch */
+  --header-h: 3.75rem;
+
+  /* ---- radii ------------------------------------------------------------
+     Small and consistent. Broadcast graphics are hard-edged; the pill is
+     reserved for things that are literally round, like a ball mark. */
+  --r-1: 3px;
+  --r-2: 6px;
+  --r-3: 10px;
+  --r-4: 16px;
+  --r-pill: 999px;
+
+  /* ---- elevation --------------------------------------------------------- */
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-2: 0 4px 16px -4px rgba(0, 0, 0, 0.55);
+  --shadow-3: 0 18px 48px -12px rgba(0, 0, 0, 0.7);
+  --glow-predict: 0 0 32px -8px rgba(79, 220, 198, 0.45);
+
+  /* ---- motion ------------------------------------------------------------ */
+  --dur-1: 100ms;
+  --dur-2: 180ms;
+  --dur-3: 320ms;
+  --dur-4: 640ms;
+  --ease: cubic-bezier(0.32, 0.72, 0.24, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* ---- stacking ---------------------------------------------------------- */
+  --z-base: 1;
+  --z-sticky: 20;
+  --z-header: 40;
+  --z-dropdown: 60;
+  --z-overlay: 80;
+
+  color-scheme: dark;
+}
+
+/* ==========================================================================
+   Light theme. The design is authored dark; this keeps the same three hues
+   but drops each accent far enough to hold contrast on paper - the aqua and
+   amber that read well on night blue would both fail against white.
+   ========================================================================== */
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: var(--c-paper-50);
+    --bg-deep: var(--c-paper-100);
+    --bg-raised: #FFFFFF;
+    --bg-sunken: var(--c-paper-100);
+    --bg-overlay: rgba(20, 23, 42, 0.55);
+
+    --line: var(--c-paper-200);
+    --line-soft: var(--c-paper-100);
+    --line-strong: var(--c-paper-300);
+
+    --text: var(--c-slate-900);
+    --text-muted: var(--c-slate-600);
+    /* Measured, not eyeballed. The dark theme's faint grey lightened to
+       #6B7191 here scored 4.19 against the sunken paper surface - under AA.
+       #545A72 clears it on all three light surfaces (6.53 / 5.98 / 6.81). */
+    --text-faint: #545A72;
+    --text-on-accent: #FFFFFF;
+
+    /* Both accents drop further on paper than a straight tint of the dark
+       values would: each one has to hold 4.5:1 against the sunken surface AND
+       against its own 10% tint, which is what a selected nav item sits on. */
+    --predict: #0A6E60;
+    --predict-ink: var(--c-aqua-800);
+    --predict-soft: rgba(10, 110, 96, 0.10);
+    --predict-line: rgba(10, 110, 96, 0.32);
+
+    --actual: #8E5400;
+    --actual-ink: #6B3F00;
+    --actual-soft: rgba(142, 84, 0, 0.10);
+    --actual-line: rgba(142, 84, 0, 0.32);
+
+    --warn: var(--c-coral-700);
+    --warn-ink: #8A1616;
+    --warn-soft: rgba(161, 30, 30, 0.09);
+    --warn-line: rgba(161, 30, 30, 0.30);
+
+    --focus: #0A6E60;
+
+    --shadow-1: 0 1px 2px rgba(20, 23, 42, 0.08);
+    --shadow-2: 0 4px 16px -4px rgba(20, 23, 42, 0.14);
+    --shadow-3: 0 18px 48px -12px rgba(20, 23, 42, 0.2);
+    --glow-predict: 0 0 24px -10px rgba(11, 122, 107, 0.35);
+
+    color-scheme: light;
+  }
+}
+
+/* Someone who has asked their system to reduce motion gets no transitions at
+   all, not shorter ones. Set to a value rather than 0 so transitionend still
+   fires and nothing waits forever on a callback. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-1: 1ms;
+    --dur-2: 1ms;
+    --dur-3: 1ms;
+    --dur-4: 1ms;
+  }
+}
