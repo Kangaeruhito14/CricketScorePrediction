@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Method and limits · Cricket Score Predictor</title>
+<meta name="description" content="Where the data comes from, how the features avoid leaking the future, and what the model cannot see.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,500..800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/css/tokens.css">
+<link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/css/components.css">
+</head>
+<body class="page">
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="shell site-header__inner">
+    <a class="brand" href="/">
+      <svg class="brand__mark" viewBox="0 0 26 26" aria-hidden="true" focusable="false">
+        <rect x="2" y="14" width="5" height="10" rx="1.5" fill="currentColor" opacity=".38"/>
+        <rect x="10.5" y="9" width="5" height="15" rx="1.5" fill="currentColor" opacity=".62"/>
+        <rect x="19" y="4" width="5" height="20" rx="1.5" fill="var(--predict)"/>
+      </svg>
+      <span class="brand__text">Cricket Score Predictor</span>
+    </a>
+
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu">
+      <span class="nav-toggle__bars" aria-hidden="true"><span></span><span></span><span></span></span>
+    </button>
+
+    <nav id="site-nav" class="site-nav" aria-label="Main">
+      <ul class="site-nav__list">
+        <li><a class="site-nav__link" href="/">Home</a></li>
+        <li><a class="site-nav__link" href="/predict.html">Predict</a></li>
+        <li><a class="site-nav__link" href="/replay.html">Replay</a></li>
+        <li><a class="site-nav__link" href="/results.html">Results</a></li>
+        <li><a class="site-nav__link" href="/about.html">About</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main" class="page__main">
+
+  <section class="band">
+    <div class="shell">
+      <div class="band__head">
+        <span class="eyebrow">Method</span>
+        <h1>How it works, and what it cannot see</h1>
+        <p>The data, the feature construction, why the split is temporal, and an honest account of the limits.</p>
+      </div>
+      <div class="empty-state"><strong>The methodology write-up arrives in phase 3</strong>Data source and scale, as-of-date features, the temporal split, and the limitations.</div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="shell">
+    <div class="site-footer__grid">
+      <div>
+        <h2>Cricket Score Predictor</h2>
+        <p>Final-score prediction from the live state of an innings, across every format in the Cricsheet archive.</p>
+      </div>
+      <div>
+        <h2>Pages</h2>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/predict.html">Predict</a></li>
+          <li><a href="/replay.html">Replay</a></li>
+          <li><a href="/results.html">Results</a></li>
+          <li><a href="/about.html">About</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2>What it does not know</h2>
+        <p>No weather, no pitch report, no team sheet. Predictions are estimates from historical patterns, not forecasts of a particular match.</p>
+      </div>
+    </div>
+    <div class="site-footer__base">
+      <span>Ball-by-ball data from <a href="https://cricsheet.org" rel="noreferrer noopener">Cricsheet</a>.</span>
+      <span>LightGBM · evaluated on a temporal split</span>
+    </div>
+  </div>
+</footer>
+
+<script src="/js/nav.js"></script>
+</body>
+</html>
