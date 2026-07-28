@@ -50,6 +50,12 @@ input, button, textarea, select {
 
 button { background: none; border: none; }
 
+/* The browser's own [hidden] rule is a plain `display: none` on the element
+   type, so any class that sets a display wins over it - .field and .btn both
+   do. Without this, hidden="" is decorative: the target input showed in a
+   first innings and "Clear all" showed with an empty history. */
+[hidden] { display: none !important; }
+
 /* Long team and venue names ("Royal Challengers Bengaluru", "Sardar Patel
    Stadium, Motera") must break rather than push the layout wider. */
 p, h1, h2, h3, h4, h5, h6, li, dd, dt, td, th, figcaption, label, summary {
