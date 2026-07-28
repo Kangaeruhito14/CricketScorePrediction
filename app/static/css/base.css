@@ -1,0 +1,255 @@
+/* ==========================================================================
+   base.css — reset, typography, layout primitives.
+   No component lives here. Every value comes from tokens.css.
+   ========================================================================== */
+
+/* ---- reset --------------------------------------------------------------- */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+* { margin: 0; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+  /* Anchored headings must not hide under the sticky header. */
+  scroll-padding-top: calc(var(--header-h) + var(--sp-4));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: var(--step-0);
+  line-height: var(--lh-normal);
+  font-weight: var(--wt-normal);
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  /* The single most common cause of a stray horizontal scrollbar is one wide
+     child. Clip at the root so a mistake anywhere cannot scroll the page
+     sideways; wide content gets its own scroller via .scroll-x. */
+  overflow-x: clip;
+}
+
+img, svg, video, canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+input, button, textarea, select {
+  font: inherit;
+  color: inherit;
+}
+
+button { background: none; border: none; }
+
+/* Long team and venue names ("Royal Challengers Bengaluru", "Sardar Patel
+   Stadium, Motera") must break rather than push the layout wider. */
+p, h1, h2, h3, h4, h5, h6, li, dd, dt, td, th, figcaption, label, summary {
+  overflow-wrap: break-word;
+}
+
+h1, h2, h3, h4 { text-wrap: balance; }
+p { text-wrap: pretty; }
+
+ul[class], ol[class] { list-style: none; padding: 0; }
+
+/* ---- typography ---------------------------------------------------------- */
+h1, h2, h3, h4, h5 {
+  font-family: var(--font-display);
+  font-weight: var(--wt-bold);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--track-tight);
+  font-variation-settings: 'wdth' 100;
+}
+
+h1 { font-size: var(--step-5); line-height: var(--lh-tight); font-weight: var(--wt-black); }
+h2 { font-size: var(--step-4); line-height: var(--lh-tight); }
+h3 { font-size: var(--step-3); }
+h4 { font-size: var(--step-2); }
+h5 { font-size: var(--step-1); }
+
+a {
+  color: var(--predict-ink);
+  text-decoration-color: var(--predict-line);
+  text-underline-offset: 0.18em;
+  transition: color var(--dur-2) var(--ease),
+              text-decoration-color var(--dur-2) var(--ease);
+}
+
+a:hover { color: var(--predict); text-decoration-color: currentColor; }
+
+strong, b { font-weight: var(--wt-semi); color: var(--text); }
+
+code, kbd, samp { font-family: var(--font-mono); font-size: 0.92em; }
+
+/* Every figure in this product is meant to be compared down a column, so
+   digits are tabular everywhere by default and lining rather than old-style. */
+.num,
+table td,
+table th,
+input[type='number'],
+.mono {
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: 'tnum' 1, 'lnum' 1;
+}
+
+.mono { font-family: var(--font-mono); }
+
+/* Section eyebrow. Set in the display face rather than mono - mono is
+   reserved here for things that are genuinely fixed-width, like the over
+   notation and the ball-by-ball strip. */
+.eyebrow {
+  font-family: var(--font-display);
+  font-size: var(--step--1);
+  font-weight: var(--wt-semi);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--text-faint);
+  display: block;
+  margin-bottom: var(--sp-3);
+}
+
+.lede {
+  font-size: var(--step-1);
+  line-height: var(--lh-loose);
+  color: var(--text-muted);
+  max-width: var(--shell-prose);
+}
+
+.muted { color: var(--text-muted); }
+.faint { color: var(--text-faint); }
+.small { font-size: var(--step--1); line-height: var(--lh-normal); }
+
+/* ---- focus ---------------------------------------------------------------
+   One visible ring for every interactive element, on every theme. The offset
+   keeps it clear of the control's own border so it reads on dense forms. */
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: var(--r-1);
+}
+
+:focus:not(:focus-visible) { outline: none; }
+
+.skip-link {
+  position: absolute;
+  left: var(--sp-4);
+  top: var(--sp-4);
+  z-index: calc(var(--z-header) + 1);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--predict);
+  color: var(--text-on-accent);
+  font-weight: var(--wt-semi);
+  border-radius: var(--r-2);
+  text-decoration: none;
+  transform: translateY(calc(-100% - var(--sp-5)));
+  transition: transform var(--dur-2) var(--ease);
+}
+
+.skip-link:focus { transform: translateY(0); color: var(--text-on-accent); }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---- layout primitives ---------------------------------------------------- */
+
+/* The horizontal measure everything sits inside. Bands are full-bleed; their
+   contents are not. */
+.shell {
+  width: 100%;
+  max-width: var(--shell);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.shell--wide { max-width: var(--shell-wide); }
+.shell--prose { max-width: var(--shell-prose); }
+
+/* A full-width horizontal band. The page is a stack of these, which is where
+   the broadcast lower-third rhythm comes from. */
+.band { padding-block: var(--band-y); position: relative; }
+.band--tight { padding-block: calc(var(--band-y) * 0.55); }
+.band--deep { background: var(--bg-deep); }
+.band--raised { background: var(--bg-raised); }
+.band + .band { border-top: 1px solid var(--line-soft); }
+
+/* The crease line: a rule down the left of a section head. Structural, not
+   decorative - it marks where a new subject starts. */
+.band__head {
+  border-left: 3px solid var(--predict);
+  padding-left: var(--sp-4);
+  margin-bottom: var(--sp-6);
+  max-width: var(--shell-prose);
+}
+
+.band__head--actual { border-left-color: var(--actual); }
+.band__head p { color: var(--text-muted); margin-top: var(--sp-3); }
+
+.stack > * + * { margin-top: var(--sp-4); }
+.stack--tight > * + * { margin-top: var(--sp-2); }
+.stack--loose > * + * { margin-top: var(--sp-6); }
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  align-items: center;
+}
+
+.row--between { justify-content: space-between; }
+.row--end { justify-content: flex-end; }
+.row--baseline { align-items: baseline; }
+
+/* Auto-fitting grid. min is a custom property so a caller can tune the
+   breakpoint without writing a media query. */
+.grid {
+  display: grid;
+  gap: var(--sp-5);
+  grid-template-columns: repeat(auto-fit, minmax(min(var(--grid-min, 17rem), 100%), 1fr));
+}
+
+.grid--2 { --grid-min: 22rem; }
+.grid--wide { --grid-min: 26rem; }
+.grid--narrow { --grid-min: 12rem; }
+
+/* Wide content - evaluation tables, the replay chart - scrolls inside itself.
+   The page never scrolls sideways. */
+.scroll-x {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+.scroll-x::-webkit-scrollbar { height: 10px; }
+.scroll-x::-webkit-scrollbar-track { background: var(--bg-sunken); border-radius: var(--r-pill); }
+.scroll-x::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border-radius: var(--r-pill);
+}
+
+.divider { border: 0; border-top: 1px solid var(--line); margin-block: var(--sp-6); }
+
+/* ---- page frame ----------------------------------------------------------- */
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+.page__main { flex: 1 0 auto; }
