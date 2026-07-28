@@ -1,0 +1,314 @@
+/* ==========================================================================
+   results.css — the evaluation report: the leakage comparison, the metric
+   tables with their in-cell bars, interval calibration and feature
+   importance. Loaded only by results.html.
+   ========================================================================== */
+
+/* ==========================================================================
+   Leakage comparison — the centrepiece
+   Three cards for the same model scored three ways. The dishonest one is
+   marked as such rather than left for the reader to work out.
+   ========================================================================== */
+.splits {
+  display: grid;
+  gap: var(--sp-4);
+  grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr));
+}
+
+.split {
+  display: grid;
+  gap: var(--sp-3);
+  align-content: start;
+  padding: var(--sp-5);
+  border: 1px solid var(--line);
+  border-radius: var(--r-3);
+  background: var(--bg-raised);
+  position: relative;
+}
+
+/* Grid items stretch by default, which pulled the badge across the whole
+   card instead of letting it hug its label. */
+.split > .badge { justify-self: start; }
+
+.split--flattering { border-color: var(--warn-line); background: var(--warn-soft); }
+.split--honest { border-color: var(--line); }
+
+/* The one number anyone should quote. */
+.split--headline {
+  border-color: var(--predict);
+  border-top-width: 3px;
+  background: var(--predict-soft);
+}
+
+.split__label {
+  font-family: var(--font-display);
+  font-size: var(--step--1);
+  font-weight: var(--wt-semi);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--text-muted);
+  min-height: calc(2 * var(--lh-normal) * 1em);
+}
+
+.split__mae {
+  font-family: var(--font-display);
+  font-size: var(--step-4);
+  font-weight: var(--wt-black);
+  line-height: 1;
+  letter-spacing: var(--track-tight);
+  font-variant-numeric: tabular-nums;
+}
+
+.split--flattering .split__mae { color: var(--warn); }
+.split--headline .split__mae { color: var(--predict); }
+
+.split__unit { font-size: var(--step--1); color: var(--text-faint); }
+.split__r2 { font-family: var(--font-mono); font-size: var(--step--1); color: var(--text-muted); }
+.split__note { font-size: var(--step--1); line-height: var(--lh-loose); color: var(--text-muted); }
+
+/* ==========================================================================
+   Bars inside table cells
+   Scaled within a format, never across formats: a shared scale would invite
+   exactly the comparison the note warns against.
+   ========================================================================== */
+.bar-cell { display: grid; gap: 4px; min-width: 5.5rem; }
+
+.bar-cell__value { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+.bar-cell__track {
+  height: 5px;
+  border-radius: var(--r-pill);
+  background: var(--bg-sunken);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+
+.bar-cell__fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--r-pill);
+  background: var(--predict);
+  width: var(--w, 0%);
+}
+
+/* A row that names a format rather than carrying a measurement. */
+tr.group-row th {
+  background: var(--bg-sunken);
+  font-family: var(--font-display);
+  font-size: var(--step--1);
+  font-weight: var(--wt-bold);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--predict);
+  padding-top: var(--sp-4);
+}
+
+/* ==========================================================================
+   Interval calibration
+   ========================================================================== */
+.coverage { display: grid; gap: var(--sp-5); }
+
+.coverage__row {
+  display: grid;
+  gap: var(--sp-2);
+  grid-template-columns: 1fr;
+}
+
+.coverage__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+
+.coverage__name { font-size: var(--step-0); }
+
+.coverage__pct {
+  font-family: var(--font-display);
+  font-size: var(--step-2);
+  font-weight: var(--wt-black);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--track-tight);
+}
+
+.coverage__track {
+  position: relative;
+  height: 26px;
+  border-radius: var(--r-2);
+  background: var(--bg-sunken);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+
+.coverage__fill {
+  height: 100%;
+  width: var(--w, 0%);
+  background: color-mix(in srgb, var(--predict) 34%, transparent);
+  border-right: 2px solid var(--predict);
+}
+
+.coverage--short .coverage__fill {
+  background: color-mix(in srgb, var(--warn) 30%, transparent);
+  border-right-color: var(--warn);
+}
+
+.coverage--short .coverage__pct { color: var(--warn); }
+.coverage--good .coverage__pct { color: var(--predict); }
+
+/* The 80% the interval is meant to hit, drawn over both bars so the gap is
+   visible rather than arithmetic. */
+.coverage__target {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  left: var(--target, 80%);
+  width: 2px;
+  background: var(--actual);
+}
+
+.coverage__legend {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--step--1);
+  color: var(--text-muted);
+}
+
+.coverage__legend::before {
+  content: '';
+  width: 2px;
+  height: 14px;
+  background: var(--actual);
+  flex-shrink: 0;
+}
+
+.coverage__note { font-size: var(--step--1); color: var(--text-faint); line-height: var(--lh-normal); }
+
+/* ==========================================================================
+   Feature importance
+   ========================================================================== */
+.importance { display: grid; gap: var(--sp-3); margin: 0; }
+
+.importance__row {
+  display: grid;
+  grid-template-columns: minmax(7rem, 11rem) minmax(0, 1fr) 3.5rem;
+  gap: var(--sp-3);
+  align-items: center;
+}
+
+@media (max-width: 34rem) {
+  .importance__row { grid-template-columns: minmax(0, 1fr) 3.5rem; }
+  .importance__bar { grid-column: 1 / -1; grid-row: 2; }
+}
+
+.importance__name {
+  font-size: var(--step--1);
+  line-height: var(--lh-snug);
+  overflow-wrap: break-word;
+}
+
+/* 1em, not 0.92em: the parent is already the smallest step on the scale, so
+   shrinking it further put this text at 11px, under the site's floor. The
+   colour carries the distinction instead. */
+.importance__name code {
+  display: block;
+  font-size: 1em;
+  color: var(--text-faint);
+}
+
+.importance__bar {
+  height: 12px;
+  border-radius: var(--r-pill);
+  background: var(--bg-sunken);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+
+.importance__fill {
+  display: block;
+  height: 100%;
+  width: var(--w, 0%);
+  background: var(--predict);
+  border-radius: var(--r-pill);
+}
+
+.importance__pct {
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  text-align: right;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   Split boundaries
+   ========================================================================== */
+.timeline { display: grid; gap: var(--sp-3); }
+
+.timeline__row {
+  display: grid;
+  grid-template-columns: 9rem minmax(0, 1fr);
+  gap: var(--sp-3);
+  align-items: center;
+}
+
+@media (max-width: 34rem) {
+  .timeline__row { grid-template-columns: 1fr; gap: var(--sp-1); }
+}
+
+/* The match count sits beside the bar, not inside it. Validation and test are
+   each about a seventh of the timeline, so a label placed within the span was
+   clipped to a few characters at every width. */
+.timeline__name {
+  display: grid;
+  gap: 2px;
+  font-family: var(--font-display);
+  font-size: var(--step--1);
+  font-weight: var(--wt-semi);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.timeline__count {
+  font-family: var(--font-mono);
+  font-weight: var(--wt-normal);
+  letter-spacing: var(--track-normal);
+  text-transform: none;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.timeline__bar {
+  position: relative;
+  height: 34px;
+  border-radius: var(--r-2);
+  background: var(--bg-sunken);
+  border: 1px solid var(--line);
+}
+
+.timeline__span {
+  position: absolute;
+  top: -1px;
+  bottom: -1px;
+  left: var(--from, 0%);
+  width: var(--span, 10%);
+  border-radius: var(--r-2);
+  background: color-mix(in srgb, var(--predict) 22%, transparent);
+  border: 1px solid var(--predict);
+}
+
+.timeline__row--test .timeline__span {
+  background: color-mix(in srgb, var(--actual) 22%, transparent);
+  border-color: var(--actual);
+}
+
+.timeline__dates {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  color: var(--text-faint);
+  margin-top: var(--sp-1);
+}
