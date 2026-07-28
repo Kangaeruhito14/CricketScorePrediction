@@ -183,7 +183,9 @@ async function predict(){
   const body={
     family:document.getElementById('fam').value,
     batting_team:bat.value, bowling_team:bowl.value, venue:venue.value,
-    overs:parseFloat(overs.value), current_score:parseInt(score.value),
+    overs_completed:Math.trunc(parseFloat(overs.value)||0),
+    balls_this_over:Math.min(5,Math.round((parseFloat(overs.value)%1)*10)||0),
+    current_score:parseInt(score.value),
     wickets:parseInt(wkts.value), last30_runs:parseFloat(l30.value),
     fours:parseInt(fours.value), sixes:parseInt(sixes.value),
     innings:parseInt(document.getElementById('inn').value),
