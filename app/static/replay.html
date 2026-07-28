@@ -105,7 +105,7 @@
     </section>
 
     <!-- ============ SUMMARY ============ -->
-    <dl class="summary" data-summary hidden>
+    <dl class="summary" data-summary>
       <div>
         <dt>Innings</dt>
         <dd data-fill="teams">—</dd>
@@ -137,11 +137,15 @@
     </dl>
 
     <!-- ============ CHART + READOUT ============ -->
-    <div class="replay-main" data-main hidden>
+    <div class="replay-main" data-main>
       <div class="chart-card">
         <figure class="chart" id="chart" tabindex="0" role="img"
                 aria-describedby="readout-note" data-chart-label>
-          <svg data-svg xmlns="http://www.w3.org/2000/svg"></svg>
+          <!-- Sized in markup so the box reserves its height before the
+               replay arrives. Without an intrinsic ratio the SVG is zero-high
+               until JS draws it, and everything below jumps when it does.
+               The ratio matches the height computeGeometry() will choose. -->
+          <svg data-svg xmlns="http://www.w3.org/2000/svg" width="800" height="368"></svg>
         </figure>
 
         <div class="chart__legend">
