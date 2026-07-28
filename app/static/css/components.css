@@ -537,7 +537,16 @@ table.data tbody tr:hover td { background: var(--bg-sunken); }
   color: var(--text-faint);
 }
 
-.stat__note { font-size: var(--step--1); color: var(--text-muted); line-height: var(--lh-normal); }
+/* Rendered as a second <dd> inside a definition list, since a <dl> grouping
+   div may hold only <dt> and <dd> - a <p> there is invalid and breaks the
+   accessibility tree. */
+.stat__note {
+  display: block;
+  margin: var(--sp-1) 0 0;
+  font-size: var(--step--1);
+  color: var(--text-muted);
+  line-height: var(--lh-normal);
+}
 .stat--predict .stat__value { color: var(--predict); }
 .stat--actual .stat__value { color: var(--actual); }
 .stat--warn .stat__value { color: var(--warn); }
@@ -609,8 +618,24 @@ table.data tbody tr:hover td { background: var(--bg-sunken); }
 }
 
 .site-footer ul { display: grid; gap: var(--sp-2); list-style: none; padding: 0; }
-.site-footer a { color: var(--text-muted); text-decoration: none; }
+
+/* Links stacked in a list read as links from their position, so they stay
+   undecorated. A link sitting inside a sentence does not: colour alone was
+   the only thing marking it, at 1.35:1 against the surrounding text, which is
+   invisible to anyone who cannot separate those two greys. Those keep their
+   underline. */
+.site-footer ul a { color: var(--text-muted); text-decoration: none; }
+.site-footer p a,
+.site-footer__base a {
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: 0.18em;
+}
+
 .site-footer a:hover { color: var(--predict); text-decoration: underline; }
+.site-footer p a:hover,
+.site-footer__base a:hover { text-decoration-color: currentColor; }
 
 .site-footer__base {
   margin-top: var(--sp-6);
