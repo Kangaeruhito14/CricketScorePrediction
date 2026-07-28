@@ -94,10 +94,17 @@ def predict_rows(rows):
     # is already on the board, and in a limited-overs innings it cannot exceed
     # roughly 18 runs an over off the balls that remain. Without this, an
     # unfamiliar venue or team can push the model somewhere impossible.
+    #
+    # The flat 20-run allowance covers an unfamiliar venue mid-innings, but it
+    # only makes sense while there are still balls to face. Applied
+    # unconditionally it also fired at the end of a completed innings, where
+    # balls_left is 0 and the final score is simply what is on the board - a
+    # side all out for 95 off 20 overs was projected to finish on 115.
     cur = np.array([r["current_score"] for r in rows], dtype=float)
     bl = np.array([np.nan if r.get("balls_left") is None else r["balls_left"]
                    for r in rows], dtype=float)
-    ceiling = np.where(np.isnan(bl), np.inf, cur + bl * 3.0 + 20.0)
+    slack = np.where(bl > 0, 20.0, 0.0)
+    ceiling = np.where(np.isnan(bl), np.inf, cur + bl * 3.0 + slack)
 
     point = np.clip(np.maximum(point, cur), None, ceiling)
     lo = np.clip(np.maximum(np.array(lo), cur), None, ceiling)
