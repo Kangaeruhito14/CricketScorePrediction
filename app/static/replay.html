@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Replay a match · Cricket Score Predictor</title>
-<meta name="description" content="Watch the model predict a real innings ball by ball and see where it was wrong.">
+<meta name="description" content="Watch the model predict a real cricket innings ball by ball and see exactly where it was wrong.">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="/css/tokens.css">
 <link rel="stylesheet" href="/css/base.css">
 <link rel="stylesheet" href="/css/components.css">
+<link rel="stylesheet" href="/css/replay.css">
 </head>
 <body class="page">
 
@@ -46,16 +47,182 @@
 
 <main id="main" class="page__main">
 
-  <section class="band">
+  <section class="band band--tight">
     <div class="shell">
       <div class="band__head">
         <span class="eyebrow">Match replay</span>
         <h1>Watch it predict a real innings</h1>
-        <p>Step through a completed innings ball by ball and compare what the model said at every moment against what the batting side finished on.</p>
+        <p>
+          Step through a completed innings ball by ball and compare what the
+          model said at every moment against what the batting side actually
+          finished on.
+        </p>
       </div>
-      <div class="empty-state"><strong>The replay view arrives in phase 5</strong>Ball-by-ball chart, a hover readout, playback controls and a table of key moments.</div>
+      <p class="callout callout--warn" data-error hidden></p>
     </div>
   </section>
+
+  <div class="shell replay-layout">
+
+    <!-- ============ PICKER ============ -->
+    <section class="card picker" aria-labelledby="picker-title">
+      <h2 class="card__title" id="picker-title">Choose an innings</h2>
+      <div class="picker__fields">
+        <div class="field">
+          <label class="field__label" for="r-family">Format</label>
+          <div class="combobox" data-combobox>
+            <input class="input combobox__input" id="r-family" type="text" placeholder="Any format">
+            <button class="combobox__toggle" type="button" tabindex="-1" aria-label="Show formats">
+              <svg viewBox="0 0 12 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m1 1.5 5 5 5-5"/></svg>
+            </button>
+            <ul class="combobox__listbox" id="r-family-listbox" role="listbox" aria-label="Format"></ul>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="r-event">Competition</label>
+          <div class="combobox" data-combobox>
+            <input class="input combobox__input" id="r-event" type="text" placeholder="Any competition">
+            <button class="combobox__toggle" type="button" tabindex="-1" aria-label="Show competitions">
+              <svg viewBox="0 0 12 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m1 1.5 5 5 5-5"/></svg>
+            </button>
+            <ul class="combobox__listbox" id="r-event-listbox" role="listbox" aria-label="Competition"></ul>
+          </div>
+        </div>
+
+        <div class="field picker__match">
+          <label class="field__label" for="r-match">Innings</label>
+          <div class="combobox" data-combobox>
+            <input class="input combobox__input" id="r-match" type="text" placeholder="Search by team, ground or city">
+            <button class="combobox__toggle" type="button" tabindex="-1" aria-label="Show innings">
+              <svg viewBox="0 0 12 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m1 1.5 5 5 5-5"/></svg>
+            </button>
+            <ul class="combobox__listbox" id="r-match-listbox" role="listbox" aria-label="Innings"></ul>
+          </div>
+          <p class="field__hint" data-match-count>&nbsp;</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SUMMARY ============ -->
+    <dl class="summary" data-summary hidden>
+      <div>
+        <dt>Innings</dt>
+        <dd data-fill="teams">—</dd>
+      </div>
+      <div>
+        <dt>Ground</dt>
+        <dd data-fill="venue">—</dd>
+      </div>
+      <div>
+        <dt>Date</dt>
+        <dd data-fill="date">—</dd>
+      </div>
+      <div>
+        <dt>Format</dt>
+        <dd data-fill="format">—</dd>
+      </div>
+      <div>
+        <dt>Competition</dt>
+        <dd data-fill="competition">—</dd>
+      </div>
+      <div>
+        <dt>Actual final score</dt>
+        <dd class="n is-actual" data-fill="final">—</dd>
+      </div>
+      <div>
+        <dt>Average error this innings</dt>
+        <dd class="n is-predict" data-fill="mae">—</dd>
+      </div>
+    </dl>
+
+    <!-- ============ CHART + READOUT ============ -->
+    <div class="replay-main" data-main hidden>
+      <div class="chart-card">
+        <figure class="chart" id="chart" tabindex="0" role="img"
+                aria-describedby="readout-note" data-chart-label>
+          <svg data-svg xmlns="http://www.w3.org/2000/svg"></svg>
+        </figure>
+
+        <div class="chart__legend">
+          <span class="chart__key chart__key--actual">Runs on the board</span>
+          <span class="chart__key chart__key--pred">What the model projected</span>
+          <span class="chart__key chart__key--band">80% band</span>
+          <span class="chart__key chart__key--final">Actual final score</span>
+          <span class="chart__key chart__key--wicket">Wicket</span>
+        </div>
+
+        <div class="controls">
+          <button class="btn btn--secondary" type="button" data-play aria-label="Play the innings ball by ball">
+            <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true" data-play-icon>
+              <path d="M4 2.5v11l9-5.5z"/>
+            </svg>
+            <span data-play-text>Play</span>
+          </button>
+          <div class="controls__scrub">
+            <input type="range" data-scrub min="0" max="0" value="0" step="1"
+                   aria-label="Scrub through the innings ball by ball">
+            <span class="controls__count" data-ball-count>—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- The readout is a panel rather than a tooltip: it stays put, it has
+           room for a full sentence, and it is still readable when the pointer
+           has moved somewhere else. -->
+      <aside class="readout" aria-live="polite" aria-atomic="true">
+        <div class="readout__ball">
+          <span class="readout__over" data-fill="ro-over">—</span>
+          <span class="readout__state" data-fill="ro-state">—</span>
+        </div>
+
+        <div class="readout__block">
+          <span class="readout__label">The model projected</span>
+          <span class="readout__pred" data-fill="ro-pred">—</span>
+          <span class="readout__band">80% band <b data-fill="ro-low">—</b> to <b data-fill="ro-high">—</b></span>
+        </div>
+
+        <div class="readout__block">
+          <span class="readout__label">Against the actual finish</span>
+          <span class="readout__gap" data-gap><b data-fill="ro-gap">—</b></span>
+        </div>
+
+        <div class="readout__flags" data-flags></div>
+
+        <p class="readout__note" id="readout-note" data-note>
+          Hover the chart, drag the scrubber, or press Play.
+        </p>
+      </aside>
+    </div>
+
+    <!-- ============ KEY MOMENTS ============ -->
+    <section data-moments hidden aria-labelledby="moments-title">
+      <div class="band__head" style="margin-bottom: var(--sp-4)">
+        <span class="eyebrow">Key moments</span>
+        <h2 id="moments-title">Where the innings turned</h2>
+        <p>Wickets, boundaries, and the balls where the projection moved most. Click a row to jump the chart there.</p>
+      </div>
+
+      <div class="table-wrap">
+        <div class="scroll-x">
+          <table class="data">
+            <caption data-moments-caption></caption>
+            <thead>
+              <tr>
+                <th scope="col">Over</th>
+                <th scope="col">Moment</th>
+                <th scope="col" class="n">Score</th>
+                <th scope="col" class="n">Projection before</th>
+                <th scope="col" class="n">Projection after</th>
+                <th scope="col" class="n">Change</th>
+              </tr>
+            </thead>
+            <tbody data-moments-rows></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
 
 </main>
 
@@ -89,5 +256,8 @@
 </footer>
 
 <script src="/js/nav.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/combobox.js"></script>
+<script src="/js/replay.js"></script>
 </body>
 </html>
