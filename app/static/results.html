@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Model results · Cricket Score Predictor</title>
-<meta name="description" content="Per-format and per-phase error, the leakage comparison, interval calibration and feature importance.">
+<meta name="description" content="Per-format and per-phase error, the leakage comparison, interval calibration and feature importance — every figure read from the trained model.">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="/css/tokens.css">
 <link rel="stylesheet" href="/css/base.css">
 <link rel="stylesheet" href="/css/components.css">
+<link rel="stylesheet" href="/css/results.css">
 </head>
 <body class="page">
 
@@ -46,14 +47,293 @@
 
 <main id="main" class="page__main">
 
-  <section class="band">
+  <section class="band band--tight">
     <div class="shell">
       <div class="band__head">
         <span class="eyebrow">Evaluation</span>
         <h1>How well it actually does</h1>
-        <p>Every figure on this page is read from the trained model's own artefacts. Retrain and the page changes with it.</p>
+        <p>
+          Every figure on this page is read from the trained model's own
+          artefacts. Nothing is typed in, so retraining updates the page by
+          itself.
+        </p>
       </div>
-      <div class="empty-state"><strong>The evaluation report arrives in phase 6</strong>Per-format and per-phase tables, the three-way leakage comparison, interval coverage and feature importance.</div>
+      <p class="callout callout--warn" data-only-family hidden></p>
+      <p class="callout callout--warn" data-error hidden></p>
+    </div>
+  </section>
+
+  <!-- ============ PER FORMAT ============ -->
+  <section class="band">
+    <div class="shell shell--wide">
+      <div class="band__head">
+        <span class="eyebrow">Error by format</span>
+        <h2>One model, <span data-fill="n-formats" class="skeleton">0</span> formats, no single score</h2>
+        <p>
+          Mean absolute error is the average number of runs the projection was
+          out by, on matches played after everything the model was trained on.
+          Root mean squared error punishes the big misses harder, and R² is the
+          share of the variation in final scores the model accounts for.
+        </p>
+      </div>
+
+      <div class="table-wrap">
+        <div class="scroll-x">
+          <table class="data">
+            <caption>
+              Bars are scaled across these three rows, which is the one place
+              on this page that comparison is meaningful — they are the same
+              measurement on the same test period.
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Format</th>
+                <th scope="col" class="n">Test rows</th>
+                <th scope="col" class="n">MAE (runs)</th>
+                <th scope="col" class="n">RMSE</th>
+                <th scope="col" class="n">R²</th>
+              </tr>
+            </thead>
+            <tbody data-format-rows>
+              <tr><td class="skeleton">Loading</td><td class="n skeleton">0</td><td class="n skeleton">0</td><td class="n skeleton">0</td><td class="n skeleton">0</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <p class="callout" style="margin-top: var(--sp-5)">
+        <strong>The overall figure is
+        <span data-fill="test-mae" class="skeleton">00.00</span> runs
+        (R² <span data-fill="test-r2" class="skeleton">0.000</span>), and it is
+        the least useful number here.</strong>
+        It is a blend of formats whose innings totals differ by a factor of
+        four. The rows above are the real story.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ PER PHASE ============ -->
+  <section class="band band--deep">
+    <div class="shell shell--wide">
+      <div class="band__head">
+        <span class="eyebrow">Error by stage of the innings</span>
+        <h2>Uncertainty falls as the innings runs out</h2>
+        <p>
+          The same test matches, split by how far through the innings each ball
+          was. With fewer balls left there is less that can still happen, so the
+          projection has less room to be wrong.
+        </p>
+      </div>
+
+      <div class="table-wrap">
+        <div class="scroll-x">
+          <table class="data">
+            <caption>
+              Bars are scaled <strong>within each format</strong>, never across
+              them. A multi-day innings can pass 500 runs and a T20 rarely
+              reaches 250, so an error of 30 runs means something completely
+              different in each — read down a format's own rows, not across
+              the table.
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Stage</th>
+                <th scope="col" class="n">Test rows</th>
+                <th scope="col" class="n">MAE (runs)</th>
+                <th scope="col" class="n">RMSE</th>
+                <th scope="col" class="n">R²</th>
+              </tr>
+            </thead>
+            <tbody data-phase-rows>
+              <tr><td class="skeleton">Loading</td><td class="n skeleton">0</td><td class="n skeleton">0</td><td class="n skeleton">0</td><td class="n skeleton">0</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ LEAKAGE — THE CENTREPIECE ============ -->
+  <section class="band">
+    <div class="shell shell--wide">
+      <div class="band__head band__head--actual">
+        <span class="eyebrow">The one that matters</span>
+        <h2>The same model, scored three ways</h2>
+        <p>
+          Identical features, identical hyperparameters, identical training
+          budget. The only difference is which rows were allowed to be test
+          rows — and it moves the headline number by more than a third.
+        </p>
+      </div>
+
+      <div class="splits" data-splits></div>
+
+      <div class="callout callout--warn" style="margin-top: var(--sp-6)">
+        <strong>The best-looking number here is the one to throw away.</strong>
+        A random split scores
+        <span data-fill="leak-random" class="skeleton">0</span> against the
+        honest <span data-fill="leak-temporal" class="skeleton">0</span> — it
+        looks <span data-fill="leak-pct" class="skeleton">0%</span> better, and
+        it is measuring nothing. Every ball of one innings shares the same
+        answer, so with rows shuffled, ball 12.3 sits in training while ball
+        12.4 sits in testing: two nearly identical rows carrying the same
+        target. The model recalls the answer instead of predicting it. Reported
+        on its own, that figure would be a claim about memorisation dressed up
+        as a claim about cricket.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ INTERVALS ============ -->
+  <section class="band band--deep">
+    <div class="shell">
+      <div class="band__head">
+        <span class="eyebrow">Interval calibration</span>
+        <h2>Is the <span data-fill="nominal" class="skeleton">80%</span> band really <span data-fill="nominal" class="skeleton">80%</span>?</h2>
+        <p>
+          A stated interval means nothing until someone counts how often it was
+          right. Both figures below are the share of test balls where the true
+          final score fell inside the band the model offered at that moment.
+        </p>
+      </div>
+
+      <div class="coverage" data-coverage></div>
+
+      <p class="coverage__legend" style="margin-top: var(--sp-4)">
+        The <span data-fill="nominal">80%</span> the band is aiming for
+      </p>
+
+      <div class="callout callout--predict" style="margin-top: var(--sp-5)">
+        <strong>Quantile regression alone was not enough.</strong>
+        The raw models covered
+        <span data-fill="cov-quantile" class="skeleton">0%</span> of cases
+        against a target of <span data-fill="nominal" class="skeleton">80%</span> —
+        an interval that narrow would mislead anyone relying on it. Recalibrating
+        on held-out validation residuals, separately for each format and each
+        quarter of the innings, brings it to
+        <span data-fill="cov-conformal" class="skeleton">0%</span>. That is still
+        <span data-fill="cov-shortfall" class="skeleton">0%</span> under target,
+        and it is reported here rather than rounded up to the number that was
+        promised.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FEATURE IMPORTANCE ============ -->
+  <section class="band">
+    <div class="shell">
+      <div class="band__head">
+        <span class="eyebrow">What the model leans on</span>
+        <h2>Top <span data-fill="imp-count" class="skeleton">25</span> features by gain</h2>
+        <p>
+          Gain is how much each feature reduced the loss across every split it
+          was used in, as a share of the total. The strongest single input is
+          <b data-fill="imp-top" class="skeleton">loading</b> at
+          <span data-fill="imp-top-pct" class="skeleton">0%</span>, and the top
+          three together account for
+          <span data-fill="imp-top3" class="skeleton">0%</span>.
+        </p>
+      </div>
+
+      <div class="importance" data-importance role="list"></div>
+
+      <p class="callout" style="margin-top: var(--sp-6)">
+        Gain says what the model used, not what causes runs. A feature can rank
+        highly because it stands in for something else the model cannot see —
+        a side's scoring history carries squad strength, era and the standard of
+        the competition all at once.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ DATASET ============ -->
+  <section class="band band--deep">
+    <div class="shell">
+      <div class="band__head">
+        <span class="eyebrow">What it was built on</span>
+        <h2>The corpus, and where it was cut</h2>
+      </div>
+
+      <dl class="facts">
+        <div>
+          <dt class="stat__label">Matches</dt>
+          <dd class="stat__value num skeleton" data-fill="matches">00,000</dd>
+        </div>
+        <div>
+          <dt class="stat__label">Innings</dt>
+          <dd class="stat__value num skeleton" data-fill="innings">00,000</dd>
+        </div>
+        <div>
+          <dt class="stat__label">Deliveries</dt>
+          <dd class="stat__value num skeleton" data-fill="deliveries">0.0 million</dd>
+        </div>
+        <div>
+          <dt class="stat__label">Training rows</dt>
+          <dd class="stat__value num skeleton" data-fill="model-rows">0.0 million</dd>
+        </div>
+        <div>
+          <dt class="stat__label">Grounds</dt>
+          <dd class="stat__value num skeleton" data-fill="venues">000</dd>
+        </div>
+        <div>
+          <dt class="stat__label">Competitions</dt>
+          <dd class="stat__value num skeleton" data-fill="events">000</dd>
+        </div>
+      </dl>
+
+      <p class="small faint" style="margin-top: var(--sp-4)">
+        Ball-by-ball records from Cricsheet, covering
+        <span class="skeleton" data-fill="date-min">start</span> to
+        <span class="skeleton" data-fill="date-max">end</span>.
+      </p>
+
+      <h3 style="margin-top: var(--sp-7); margin-bottom: var(--sp-4)">Where the split falls</h3>
+      <p style="max-width: var(--shell-prose); margin-bottom: var(--sp-5)" class="muted">
+        Matches are ordered by date and cut in time, so no innings is ever
+        divided between two sets and nothing is scored against a match that had
+        not been played yet.
+      </p>
+
+      <div class="timeline" data-timeline></div>
+
+      <div class="table-wrap" style="margin-top: var(--sp-6)">
+        <div class="scroll-x">
+          <table class="data">
+            <thead>
+              <tr>
+                <th scope="col">Set</th>
+                <th scope="col" class="n">Matches</th>
+                <th scope="col">From</th>
+                <th scope="col">To</th>
+                <th scope="col">Used for</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">Train</th>
+                <td class="n skeleton" data-fill="train-n">0</td>
+                <td class="skeleton" data-fill="train-start">—</td>
+                <td class="skeleton" data-fill="train-end">—</td>
+                <td>Fitting the model</td>
+              </tr>
+              <tr>
+                <th scope="row">Validation</th>
+                <td class="n skeleton" data-fill="valid-n">0</td>
+                <td class="skeleton" data-fill="valid-start">—</td>
+                <td class="skeleton" data-fill="valid-end">—</td>
+                <td>Early stopping, and calibrating the band</td>
+              </tr>
+              <tr>
+                <th scope="row">Test</th>
+                <td class="n skeleton" data-fill="test-n">0</td>
+                <td class="skeleton" data-fill="test-start">—</td>
+                <td class="skeleton" data-fill="test-end">—</td>
+                <td>Every figure on this page</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -89,5 +369,7 @@
 </footer>
 
 <script src="/js/nav.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/results.js"></script>
 </body>
 </html>
