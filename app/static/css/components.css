@@ -50,7 +50,10 @@
 .brand__text { white-space: nowrap; }
 
 @media (max-width: 49.99rem) {
-  .brand__text { white-space: normal; max-width: 14ch; }
+  /* Wide enough for "Cricket Score" to sit on one line above "Predictor";
+     at 14ch it broke into three, which the row has no need to be that tall
+     for even at 320px. */
+  .brand__text { white-space: normal; max-width: 17ch; }
 }
 
 @media (max-width: 23.75rem) {
@@ -619,6 +622,268 @@ table.data tbody tr:hover td { background: var(--bg-sunken); }
   justify-content: space-between;
   line-height: var(--lh-normal);
 }
+
+/* ==========================================================================
+   Hero
+   Two columns once there is room for two; the statement always comes first in
+   source order so it is also first for a screen reader and on a phone.
+   ========================================================================== */
+.hero { padding-block: clamp(2rem, 1rem + 5vw, 5rem) var(--band-y); }
+
+.hero__grid {
+  display: grid;
+  gap: clamp(2rem, 1rem + 4vw, 4rem);
+  align-items: center;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 62rem) {
+  .hero__grid { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); }
+}
+
+.hero__title { margin-block: var(--sp-4) var(--sp-5); }
+.hero__lede { font-size: var(--step-1); line-height: var(--lh-loose); color: var(--text-muted); }
+.hero__actions { margin-top: var(--sp-6); gap: var(--sp-4); }
+
+/* ==========================================================================
+   The interval rail — the signature element.
+   A projection is a range, not a number, so the range is drawn rather than
+   written: the lit segment is the 80% band, the solid mark is the model's
+   point, and the hollow mark is where a flat run-rate extrapolation would
+   land. Seeing the two marks disagree is the whole argument for the model.
+   Positions arrive as percentages in --lo, --hi, --point and --naive.
+   ========================================================================== */
+.rail { margin: 0; }
+
+.rail__scale {
+  position: relative;
+  height: 64px;
+  margin-block: var(--sp-5) var(--sp-3);
+}
+
+/* The full span of physically possible finishes, from what is already on the
+   board to the top of the band. */
+.rail__scale::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 26px;
+  height: 12px;
+  border-radius: var(--r-pill);
+  background: var(--bg-sunken);
+  border: 1px solid var(--line-strong);
+}
+
+/* The band has to carry the eye at a glance, so it is a solid mix of the
+   prediction colour rather than the 12% tint used for chip backgrounds -
+   at that strength it disappeared into the card it sits on. */
+.rail__band {
+  position: absolute;
+  top: 24px;
+  left: var(--lo, 25%);
+  width: max(3px, calc(var(--hi, 75%) - var(--lo, 25%)));
+  height: 16px;
+  border-radius: var(--r-pill);
+  background: color-mix(in srgb, var(--predict) 32%, transparent);
+  border: 1px solid var(--predict);
+}
+
+.rail__point {
+  position: absolute;
+  top: 8px;
+  left: var(--point, 50%);
+  width: 5px;
+  height: 48px;
+  margin-left: -2.5px;
+  border-radius: var(--r-pill);
+  background: var(--predict);
+  box-shadow: var(--glow-predict);
+}
+
+/* Hollow, and in the neutral line colour rather than an accent: the naive
+   figure is a reference point, not a second prediction. */
+.rail__naive {
+  position: absolute;
+  top: 16px;
+  left: var(--naive, 30%);
+  width: 2px;
+  height: 32px;
+  margin-left: -1px;
+  background: var(--text-faint);
+}
+
+.rail__naive::after {
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: -9px;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--r-pill);
+  border: 2px solid var(--text-faint);
+  background: var(--bg-raised);
+}
+
+.rail__ends {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  color: var(--text-faint);
+}
+
+.rail__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-4);
+  margin-top: var(--sp-4);
+  font-size: var(--step--1);
+  color: var(--text-muted);
+  line-height: var(--lh-normal);
+}
+
+.rail__key { display: inline-flex; align-items: center; gap: var(--sp-2); }
+
+.rail__key::before {
+  content: '';
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  background: var(--predict);
+}
+
+.rail__key--band::before { background: var(--predict-line); border: 1px solid var(--predict-line); }
+.rail__key--naive::before { background: transparent; border: 2px solid var(--text-faint); border-radius: var(--r-pill); }
+
+/* ==========================================================================
+   The big projected score
+   ========================================================================== */
+.score {
+  font-family: var(--font-display);
+  font-size: var(--step-score);
+  font-weight: var(--wt-black);
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  font-variation-settings: 'wdth' 118;
+  font-variant-numeric: tabular-nums lining-nums;
+  color: var(--predict);
+  display: block;
+}
+
+.score--sm { font-size: var(--step-5); }
+
+.score__caption {
+  font-family: var(--font-display);
+  font-size: var(--step--1);
+  font-weight: var(--wt-semi);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+/* Scorecard notation: 96/2 (11.4). The trailing detail steps back so the
+   runs read first, the way a broadcast scoreline is weighted. */
+.scoreline { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.scoreline b { font-weight: var(--wt-semi); color: var(--text); }
+.scoreline span { color: var(--text-faint); }
+
+/* ==========================================================================
+   Link cards — the calls to action
+   ========================================================================== */
+.link-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-5);
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--r-3);
+  text-decoration: none;
+  color: var(--text);
+  transition: border-color var(--dur-2) var(--ease),
+              transform var(--dur-2) var(--ease),
+              box-shadow var(--dur-2) var(--ease);
+}
+
+.link-card:hover {
+  color: var(--text);
+  border-color: var(--predict);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .link-card:hover { transform: none; }
+}
+
+.link-card__title {
+  font-family: var(--font-display);
+  font-size: var(--step-1);
+  font-weight: var(--wt-bold);
+  letter-spacing: var(--track-tight);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.link-card__title::after {
+  content: '→';
+  color: var(--predict);
+  transition: transform var(--dur-2) var(--ease);
+}
+
+.link-card:hover .link-card__title::after { transform: translateX(3px); }
+.link-card p { color: var(--text-muted); font-size: var(--step--1); line-height: var(--lh-loose); }
+
+/* ==========================================================================
+   Numbered points — used where the content genuinely is a sequence
+   ========================================================================== */
+.steps { counter-reset: step; display: grid; gap: var(--sp-6); }
+
+.steps > li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--sp-4);
+  align-items: start;
+}
+
+.steps > li::before {
+  counter-increment: step;
+  content: counter(step, decimal-leading-zero);
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  font-weight: var(--wt-medium);
+  color: var(--predict);
+  padding-top: 0.35em;
+}
+
+.steps h3 { font-size: var(--step-1); margin-bottom: var(--sp-2); }
+.steps p { color: var(--text-muted); }
+
+/* ==========================================================================
+   Definition list for figure + label pairs
+   ========================================================================== */
+.facts {
+  display: grid;
+  gap: var(--sp-5);
+  grid-template-columns: repeat(auto-fit, minmax(min(11rem, 100%), 1fr));
+  margin: 0;
+}
+
+.facts div { min-width: 0; }
+.facts dt { margin-bottom: var(--sp-1); }
+.facts dd { margin: 0; }
+
+/* For short numeric pairs inside a card, where the default 11rem minimum
+   leaves a third item stranded on its own row. */
+.facts--tight { --fact-min: 7.5rem; gap: var(--sp-4); }
+.facts--tight { grid-template-columns: repeat(auto-fit, minmax(min(var(--fact-min), 100%), 1fr)); }
+.facts--tight .stat__value,
+.facts--tight dd { font-size: var(--step-1); font-family: var(--font-mono); }
 
 /* ==========================================================================
    Loading and empty states
