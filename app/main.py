@@ -5,6 +5,7 @@ Endpoints
   GET  /                 the web GUI
   GET  /api/meta         dropdowns + honest metrics, per format
   GET  /api/options      team/venue/event lists scoped to a format+competition
+  GET  /api/report       everything the model-results page renders
   POST /api/predict      one prediction from a manual match state
   GET  /api/matches      innings available for replay
   GET  /api/replay/{id}  ball-by-ball predictions for one real innings
@@ -24,6 +25,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MODELS = os.path.join(ROOT, "models")
+REPORTS = os.path.join(ROOT, "reports")
 APP = os.path.join(ROOT, "app")
 
 app = FastAPI(title="Cricket Score Predictor")
@@ -355,6 +357,64 @@ def api_options(family: str, event: str = ""):
         "venue_city": {v: city[v] for v in venues if v in city},
         "total_balls": TOTAL_BALLS.get(family),
         "match_type": lookups["match_type_by_family"].get(family),
+    }
+
+
+@app.get("/api/report")
+def api_report():
+    """Everything the model-results page renders, straight from the artefacts.
+
+    Sourced from models/meta.json, models/lookups.json and reports/. Nothing
+    here is computed in the page, so a retrain updates the site by itself.
+    """
+    imp = []
+    imp_path = os.path.join(REPORTS, "feature_importance.csv")
+    if os.path.exists(imp_path):
+        fi = pd.read_csv(imp_path).sort_values("gain", ascending=False)
+        total_gain = float(fi["gain"].sum()) or 1.0
+        imp = [{"feature": str(r.feature),
+                "gain": float(r.gain),
+                "share": round(float(r.gain) / total_gain, 5)}
+               for r in fi.head(25).itertuples()]
+
+    return {
+        "headline": {
+            "test_mae": meta["test_mae"],
+            "test_r2": meta["test_r2"],
+            "n_train_matches": meta["n_train_matches"],
+            "n_test_matches": meta["n_test_matches"],
+        },
+        "format_table": meta.get("format_table", []),
+        "phase_table": meta.get("phase_table", []),
+        "phase_names": meta.get("phase_names", {}),
+        # Same model, same features, three ways of deciding which rows are
+        # allowed to be test rows. The page explains why the best number here
+        # is the dishonest one.
+        "leakage": [
+            {"split": "random",
+             "label": "Random ball-level split",
+             "mae": meta.get("leaky_random_split_mae"),
+             "r2": meta.get("leaky_random_split_r2"),
+             "honest": False},
+            {"split": "group",
+             "label": "Group split by match",
+             "mae": meta.get("group_split_mae"),
+             "r2": None,
+             "honest": True},
+            {"split": "temporal",
+             "label": "Temporal split (train on the past)",
+             "mae": meta["test_mae"],
+             "r2": meta["test_r2"],
+             "honest": True},
+        ],
+        "intervals": {
+            "nominal": 0.80,
+            "quantile": meta.get("interval_coverage_quantile"),
+            "conformal": meta.get("interval_coverage_conformal"),
+        },
+        "feature_importance": imp,
+        "dataset": lookups.get("dataset", {}),
+        "only_family": meta.get("only_family"),
     }
 
 
