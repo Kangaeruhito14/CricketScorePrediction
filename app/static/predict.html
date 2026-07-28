@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Predict a score · Cricket Score Predictor</title>
-<meta name="description" content="Enter the live state of an innings and get a projected final score with an 80% interval.">
+<meta name="description" content="Enter the live state of a cricket innings and get a projected final score with an 80% interval, for T20, ODI and multi-day cricket.">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="/css/tokens.css">
 <link rel="stylesheet" href="/css/base.css">
 <link rel="stylesheet" href="/css/components.css">
+<link rel="stylesheet" href="/css/predict.css">
 </head>
 <body class="page">
 
@@ -46,16 +47,319 @@
 
 <main id="main" class="page__main">
 
-  <section class="band">
+  <section class="band band--tight">
     <div class="shell">
       <div class="band__head">
         <span class="eyebrow">Prediction tool</span>
         <h1>Project a final score</h1>
-        <p>Set the match up, enter where the innings has got to, and the model returns a final score with the range it expects around it.</p>
+        <p>
+          Set the match up, say where the innings has got to, and the model
+          returns the total it expects — with the range around it.
+        </p>
       </div>
-      <div class="empty-state"><strong>The prediction form arrives in phase 4</strong>Match setup, live state and result, with cascading filters and searchable fields.</div>
+      <p class="callout callout--warn" data-error hidden></p>
     </div>
   </section>
+
+  <div class="shell predict-layout">
+
+    <form class="predict-form" id="predict-form" novalidate>
+
+      <!-- ============ SECTION 1 — MATCH SETUP ============ -->
+      <section class="section" aria-labelledby="s1-title">
+        <header class="section__head">
+          <span class="section__num" aria-hidden="true">01</span>
+          <div>
+            <h2 class="section__title" id="s1-title">Match setup</h2>
+            <p class="section__note">Choosing a competition narrows the teams and grounds to the ones that appear in it.</p>
+          </div>
+        </header>
+
+        <div class="section__body">
+          <div class="field-group">
+            <div class="field" data-field="family">
+              <label class="field__label" for="f-family">Format</label>
+              <div class="combobox" data-combobox>
+                <input class="input combobox__input" id="f-family" type="text" placeholder="Choose a format">
+                <button class="combobox__toggle" type="button" tabindex="-1" aria-label="Show formats">
+                  <svg viewBox="0 0 12 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m1 1.5 5 5 5-5"/></svg>
+                </button>
+                <ul class="combobox__listbox" id="f-family-listbox" role="listbox" aria-label="Format"></ul>
+              </div>
+              <p class="field__error" id="f-family-error"></p>
+            </div>
+
+            <div class="field" data-field="event">
+              <label class="field__label" for="f-event">Competition</label>
+              <div class="combobox" data-combobox>
+                <input class="input combobox__input" id="f-event" type="text" placeholder="Any competition">
+                <button class="combobox__toggle" type="button" tabindex="-1" aria-label="Show competitions">
+                  <svg viewBox="0 0 12 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m1 1.5 5 5 5-5"/></svg>
+                </button>
+                <ul class="combobox__listbox" id="f-event-listbox" role="listbox" aria-label="Competition"></ul>
+              </div>
+              <p class="field__hint">The model leans on this. Leaving it blank makes the prediction worse.</p>
+              <p class="field__error" id="f-event-error"></p>
+            </div>
+          </div>
+
+          <!-- The swap control sits between the two teams on desktop and
+               below them on a phone; the grid places it, the button is the
+               same element in both. -->
+          <div class="teams">
+            <div class="field teams__bat" data-field="batting_team">
+              <label class="field__label" for="f-bat">Batting team</label>
+              <div class="combobox" data-combobox>
+                <input class="input combobox__input" id="f-bat" type="text" placeholder="Search teams">
+                <button class="combobox__toggle" type="button" tabindex="-1" aria-label="Show teams">
+                  <svg viewBox="0 0 12 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m1 1.5 5 5 5-5"/></svg>
+                </button>
+                <ul class="combobox__listbox" id="f-bat-listbox" role="listbox" aria-label="Batting team"></ul>
+              </div>
+              <p class="field__error" id="f-bat-error"></p>
+            </div>
+
+            <div class="teams__swap">
+              <button class="btn btn--icon" type="button" id="swap-teams"
+                      aria-label="Swap the batting and bowling teams">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M7 16V4m0 0L3 8m4-4 4 4"/><path d="M17 8v12m0 0 4-4m-4 4-4-4"/>
+                </svg>
+              </button>
+            </div>
+
+            <div class="field teams__bowl" data-field="bowling_team">
+              <label class="field__label" for="f-bowl">Bowling team</label>
+              <div class="combobox" data-combobox>
+                <input class="input combobox__input" id="f-bowl" type="text" placeholder="Search teams">
+                <button class="combobox__toggle" type="button" tabindex="-1" aria-label="Show teams">
+                  <svg viewBox="0 0 12 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m1 1.5 5 5 5-5"/></svg>
+                </button>
+                <ul class="combobox__listbox" id="f-bowl-listbox" role="listbox" aria-label="Bowling team"></ul>
+              </div>
+              <p class="field__error" id="f-bowl-error"></p>
+            </div>
+          </div>
+
+          <p class="callout callout--warn small" data-cascade-note hidden></p>
+
+          <div class="field-group">
+            <div class="field" data-field="venue">
+              <label class="field__label" for="f-venue">Venue</label>
+              <div class="combobox" data-combobox>
+                <input class="input combobox__input" id="f-venue" type="text" placeholder="Search grounds or cities">
+                <button class="combobox__toggle" type="button" tabindex="-1" aria-label="Show venues">
+                  <svg viewBox="0 0 12 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m1 1.5 5 5 5-5"/></svg>
+                </button>
+                <ul class="combobox__listbox" id="f-venue-listbox" role="listbox" aria-label="Venue"></ul>
+              </div>
+              <p class="field__hint">Type a city to see every ground there.</p>
+              <p class="field__error" id="f-venue-error"></p>
+            </div>
+
+            <div class="field" data-field="innings">
+              <label class="field__label" for="f-innings">Innings</label>
+              <select class="input" id="f-innings">
+                <option value="1">1st — setting a total</option>
+                <option value="2">2nd — chasing</option>
+                <option value="3">3rd</option>
+                <option value="4">4th</option>
+              </select>
+              <p class="field__error" id="f-innings-error"></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SECTION 2 — LIVE STATE ============ -->
+      <section class="section" aria-labelledby="s2-title">
+        <header class="section__head">
+          <span class="section__num" aria-hidden="true">02</span>
+          <div>
+            <h2 class="section__title" id="s2-title">Live state</h2>
+            <p class="section__note">Where the innings has got to right now.</p>
+          </div>
+        </header>
+
+        <div class="section__body">
+          <div class="overs">
+            <div class="field" data-field="overs_completed">
+              <label class="field__label" for="f-overs">Overs completed</label>
+              <input class="input num" id="f-overs" type="number" inputmode="numeric" min="0" step="1" value="11">
+              <p class="field__error" id="f-overs-error"></p>
+            </div>
+
+            <div class="field" data-field="balls_this_over">
+              <label class="field__label" for="f-balls">Balls this over</label>
+              <input class="input num" id="f-balls" type="number" inputmode="numeric" min="0" max="5" step="1" value="4">
+              <p class="field__error" id="f-balls-error"></p>
+            </div>
+
+            <!-- Two integers are what the API needs; a scorecard reads in
+                 conventional notation. This shows both without letting anyone
+                 type an over that does not exist. -->
+            <div class="overs__reads">
+              <span class="field__label">Reads as</span>
+              <output class="overs__value mono" id="overs-display" for="f-overs f-balls">11.4 overs</output>
+              <span class="overs__left small faint" id="balls-left-note"></span>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <div class="field" data-field="current_score">
+              <label class="field__label" for="f-score">Current score</label>
+              <input class="input num" id="f-score" type="number" inputmode="numeric" min="0" step="1" value="96">
+              <p class="field__error" id="f-score-error"></p>
+            </div>
+
+            <div class="field" data-field="wickets">
+              <label class="field__label" for="f-wkts">Wickets down</label>
+              <input class="input num" id="f-wkts" type="number" inputmode="numeric" min="0" max="10" step="1" value="2">
+              <p class="field__error" id="f-wkts-error"></p>
+            </div>
+
+            <div class="field" data-field="last30_runs">
+              <label class="field__label" for="f-last5">Runs in the last 5 overs</label>
+              <input class="input num" id="f-last5" type="number" inputmode="numeric" min="0" step="1" value="42">
+              <p class="field__hint">Leave blank and it will be estimated from the run rate.</p>
+              <p class="field__error" id="f-last5-error"></p>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <div class="field" data-field="fours">
+              <label class="field__label" for="f-fours">Fours</label>
+              <input class="input num" id="f-fours" type="number" inputmode="numeric" min="0" step="1" value="8">
+              <p class="field__error" id="f-fours-error"></p>
+            </div>
+
+            <div class="field" data-field="sixes">
+              <label class="field__label" for="f-sixes">Sixes</label>
+              <input class="input num" id="f-sixes" type="number" inputmode="numeric" min="0" step="1" value="3">
+              <p class="field__error" id="f-sixes-error"></p>
+            </div>
+
+            <!-- Only meaningful when someone is chasing, so it is not shown
+                 in a first innings rather than shown and ignored. -->
+            <div class="field" data-field="target" id="target-field" hidden>
+              <label class="field__label" for="f-target">Target</label>
+              <input class="input num" id="f-target" type="number" inputmode="numeric" min="0" step="1" value="0">
+              <p class="field__hint">The total this side has to beat.</p>
+              <p class="field__error" id="f-target-error"></p>
+            </div>
+          </div>
+
+          <div class="row form-actions">
+            <button class="btn btn--primary btn--lg" type="submit" id="predict-btn">Predict final score</button>
+            <button class="btn btn--ghost" type="button" id="reset-btn">Reset</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SECTION 3 — RESULT ============ -->
+      <section class="section section--result" aria-labelledby="s3-title">
+        <header class="section__head">
+          <span class="section__num" aria-hidden="true">03</span>
+          <div>
+            <h2 class="section__title" id="s3-title">Result</h2>
+            <p class="section__note">The projection, the range around it, and what it is standing on.</p>
+          </div>
+        </header>
+
+        <div class="section__body">
+          <div class="result" id="result" aria-live="polite">
+
+            <p class="empty-state" data-result-empty>
+              <strong>No projection yet</strong>
+              Fill in the two sections above and press Predict.
+            </p>
+
+            <div data-result-body hidden>
+              <div class="result__headline">
+                <p class="score__caption">Projected final score</p>
+                <strong class="score" data-fill="predicted">—</strong>
+                <p class="result__band">
+                  <span data-fill="nominal">80%</span> of the time it finishes between
+                  <b data-fill="low">—</b> and <b data-fill="high">—</b>
+                </p>
+              </div>
+
+              <figure class="rail">
+                <div class="rail__scale" role="img" data-rail-label>
+                  <div class="rail__band"></div>
+                  <div class="rail__naive"></div>
+                  <div class="rail__point"></div>
+                </div>
+                <div class="rail__ends">
+                  <span data-fill="rail-min">—</span>
+                  <span data-fill="rail-max">—</span>
+                </div>
+                <figcaption class="rail__legend">
+                  <span class="rail__key">Projection <b data-fill="predicted">—</b></span>
+                  <span class="rail__key rail__key--band"><span data-fill="nominal">80%</span> band <b data-fill="low">—</b>–<b data-fill="high">—</b></span>
+                  <span class="rail__key rail__key--naive">At the current rate <b data-fill="naive">—</b></span>
+                </figcaption>
+              </figure>
+
+              <dl class="facts result__facts">
+                <div>
+                  <dt class="stat__label">Current run rate</dt>
+                  <dd class="stat__value num" data-fill="crr">—</dd>
+                </div>
+                <div>
+                  <dt class="stat__label">Balls remaining</dt>
+                  <dd class="stat__value num" data-fill="balls-left">—</dd>
+                </div>
+                <div>
+                  <dt class="stat__label">Venue par</dt>
+                  <dd class="stat__value num" data-fill="venue-par">—</dd>
+                  <p class="stat__note" data-fill="venue-n">—</p>
+                </div>
+                <div>
+                  <dt class="stat__label">At the current rate</dt>
+                  <dd class="stat__value num" data-fill="naive">—</dd>
+                  <p class="stat__note" data-fill="naive-gap">—</p>
+                </div>
+              </dl>
+
+              <p class="callout" data-verdict></p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </form>
+
+    <!-- ============ HISTORY ============ -->
+    <aside class="history" aria-labelledby="history-title">
+      <details class="history__box" id="history-box" open>
+        <summary class="history__summary">
+          <span class="history__heading" id="history-title">Your predictions</span>
+          <span class="badge" data-history-count>0</span>
+        </summary>
+
+        <div class="history__body">
+          <p class="history__note small faint">
+            Saved in this browser only. Click one to load it back into the form.
+          </p>
+
+          <ul class="history__list" data-history-list></ul>
+
+          <p class="empty-state small" data-history-empty>
+            <strong>Nothing saved yet</strong>
+            Every prediction you make is kept here.
+          </p>
+
+          <p class="callout callout--warn small" data-history-unavailable hidden>
+            This browser will not let the page save anything, so history is off
+            for this session.
+          </p>
+
+          <button class="btn btn--danger btn--sm btn--block" type="button"
+                  data-history-clear hidden>Clear all</button>
+        </div>
+      </details>
+    </aside>
+  </div>
 
 </main>
 
@@ -89,5 +393,9 @@
 </footer>
 
 <script src="/js/nav.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/combobox.js"></script>
+<script src="/js/history.js"></script>
+<script src="/js/predict.js"></script>
 </body>
 </html>
