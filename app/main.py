@@ -4,6 +4,7 @@ Cricket Score Predictor — FastAPI backend (all formats)
 Endpoints
   GET  /                 the web GUI
   GET  /api/meta         dropdowns + honest metrics, per format
+  GET  /api/options      team/venue/event lists scoped to a format+competition
   POST /api/predict      one prediction from a manual match state
   GET  /api/matches      innings available for replay
   GET  /api/replay/{id}  ball-by-ball predictions for one real innings
@@ -40,6 +41,9 @@ CATEGORIES = meta["categories"]
 CONFORMAL = meta.get("conformal_offsets", {})
 FALLBACK = meta.get("conformal_fallback", [-30.0, 30.0])
 DEFAULTS = meta["defaults"]
+
+FAMILIES = list(lookups["families"])
+TOTAL_BALLS = lookups["family_total_balls"]
 
 _rp = os.path.join(APP, "replay_sample.parquet")
 REPLAY = pd.read_parquet(_rp) if os.path.exists(_rp) else None
@@ -206,6 +210,59 @@ def api_meta():
             "format_table": meta.get("format_table", []),
             "phase_table": meta.get("phase_table", []),
         },
+    }
+
+
+@app.get("/api/options")
+def api_options(family: str, event: str = ""):
+    """Team, venue and competition lists for one format+competition pair.
+
+    The family lists alone are too coarse for the form: picking a format still
+    leaves every side that has ever played it selectable, so a user can build
+    an IPL innings out of BPL teams and get a confident answer to a fixture
+    that never happened. With a competition chosen, the lists narrow to sides
+    and grounds that actually appear in it.
+    """
+    if family not in FAMILIES:
+        raise HTTPException(
+            400, f"Unknown format {family!r}. Choose one of: {', '.join(FAMILIES)}.")
+
+    fam_teams = lookups["teams_by_family"][family]
+    fam_venues = lookups["venues_by_family"][family]
+    # The empty event is a real training category (a match with no competition
+    # recorded), but it is not something to list in a dropdown. The caller asks
+    # for it by sending event="" and gets the family lists back.
+    events = [e for e in lookups["events_by_family"][family] if e]
+
+    teams, venues, scoped = fam_teams, fam_venues, False
+    if event:
+        ev_teams = set(lookups["teams_by_event"].get(event, []))
+        ev_venues = set(lookups["venues_by_event"].get(event, []))
+        # Intersect rather than trust the event alone: 180 competitions run
+        # more than one format, so an event's team list can carry sides that
+        # only ever played the other format under the same banner.
+        t = sorted(ev_teams & set(fam_teams))
+        v = sorted(ev_venues & set(fam_venues))
+        # venues_by_family drops grounds with fewer than three matches, which
+        # can empty a small competition entirely. Fall back rather than hand
+        # back a dropdown with nothing in it.
+        teams = t or sorted(ev_teams) or fam_teams
+        venues = v or sorted(ev_venues) or fam_venues
+        scoped = bool(ev_teams or ev_venues)
+
+    city = lookups.get("venue_city", {})
+    return {
+        "family": family,
+        "event": event,
+        "scoped": scoped,
+        "events": events,
+        "teams": teams,
+        "venues": venues,
+        # Only the venues actually returned, so the combobox can match a typed
+        # city name without pulling the whole 808-entry map on every keystroke.
+        "venue_city": {v: city[v] for v in venues if v in city},
+        "total_balls": TOTAL_BALLS.get(family),
+        "match_type": lookups["match_type_by_family"].get(family),
     }
 
 
