@@ -441,11 +441,23 @@ def api_matches():
          .agg(date=("date", "first"), fam=("family", "first"),
               mt=("match_type", "first"), bat=("batting_team", "first"),
               bowl=("bowling_team", "first"), venue=("venue", "first"),
+              city=("city", "first"), event=("event", "first"),
               final=("final_score", "first"))
          .reset_index().sort_values("date", ascending=False))
+    # The fields are returned separately as well as pre-joined into `label`:
+    # the replay page filters by format and competition and searches across
+    # team, ground and city, none of which it can do against one string.
     return [{
         "id": f"{r.match_id}:{r.innings}",
         "family": r.fam,
+        "match_type": r.mt,
+        "batting_team": r.bat,
+        "bowling_team": r.bowl,
+        "venue": r.venue,
+        "city": "" if pd.isna(r.city) else str(r.city),
+        "event": "" if pd.isna(r.event) else str(r.event),
+        "innings": int(r.innings),
+        "date": str(r.date)[:10],
         "label": f"[{r.mt}] {r.bat} vs {r.bowl} — inns {r.innings} — "
                  f"{str(r.date)[:10]} ({r.venue[:34]})",
         "final": int(r.final),
@@ -469,16 +481,29 @@ def api_replay(rid: str):
     rows = sub[cols].to_dict(orient="records")
     point, lo, hi = predict_rows(rows)
     final = int(sub["final_score"].iloc[0])
+    total = sub["total_balls_f"].iloc[0]
+    event = sub["event"].iloc[0]
     return {
         "id": rid,
+        "family": sub["family"].iloc[0],
         "match_type": sub["match_type"].iloc[0],
         "batting_team": sub["batting_team"].iloc[0],
         "bowling_team": sub["bowling_team"].iloc[0],
         "venue": sub["venue"].iloc[0],
+        "city": "" if pd.isna(sub["city"].iloc[0]) else str(sub["city"].iloc[0]),
+        "event": "" if pd.isna(event) else str(event),
+        "innings": int(inn),
         "date": str(sub["date"].iloc[0])[:10],
         "final_score": final,
+        "total_balls": None if pd.isna(total) else int(total),
+        "target": int(sub["target_runs"].iloc[0] or 0),
         "balls": sub["balls_bowled"].astype(int).tolist(),
         "score": sub["current_score"].astype(int).tolist(),
+        # Wickets down rather than wickets left: the readout panel and the
+        # key-moments table both talk in the language of a scorecard.
+        "wickets": (10 - sub["wickets_left"]).astype(int).tolist(),
+        "fours": sub["fours"].astype(int).tolist(),
+        "sixes": sub["sixes"].astype(int).tolist(),
         "pred": [round(float(x), 1) for x in point],
         "low": [round(float(x), 1) for x in lo],
         "high": [round(float(x), 1) for x in hi],
