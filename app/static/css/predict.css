@@ -19,7 +19,19 @@
   .history { position: sticky; top: calc(var(--header-h) + var(--sp-4)); }
 }
 
-.predict-form { display: grid; gap: var(--sp-6); min-width: 0; }
+/* minmax(0, 1fr) and an explicit zero minimum on the children. A grid item
+   defaults to min-width:auto, and while .section carried overflow:hidden it
+   was incidentally acting as a scroll container and contributing zero. Taking
+   that overflow off to free the dropdowns also restored the intrinsic
+   minimum, which pushed the sections 1px past a 320px viewport. */
+.predict-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sp-6);
+  min-width: 0;
+}
+
+.predict-form > * { min-width: 0; }
 
 /* ==========================================================================
    Sections
@@ -27,11 +39,16 @@
    live state before saying which match it is, and there is no result until
    both are given.
    ========================================================================== */
+/* No overflow:hidden here. It was only ever clipping the header's background
+   to the rounded corners, but it also clipped every combobox listbox opening
+   inside the section - the venue field sits near the bottom edge, so its
+   dropdown was cut to a single visible row. The header rounds its own top
+   corners instead, which achieves the same thing without trapping the
+   dropdowns. */
 .section {
   background: var(--bg-raised);
   border: 1px solid var(--line);
   border-radius: var(--r-4);
-  overflow: hidden;
 }
 
 .section__head {
@@ -42,6 +59,8 @@
   padding: var(--sp-5);
   background: var(--bg-sunken);
   border-bottom: 1px solid var(--line);
+  /* Inset by the section's 1px border so the fill meets the frame cleanly. */
+  border-radius: calc(var(--r-4) - 1px) calc(var(--r-4) - 1px) 0 0;
 }
 
 .section__num {
