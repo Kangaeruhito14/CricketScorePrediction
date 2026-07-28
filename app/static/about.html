@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Method and limits · Cricket Score Predictor</title>
-<meta name="description" content="Where the data comes from, how the features avoid leaking the future, and what the model cannot see.">
+<meta name="description" content="Where the data comes from, how the features avoid seeing the future, why the split is temporal, and an honest account of what the model cannot know.">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -46,14 +46,344 @@
 
 <main id="main" class="page__main">
 
+  <!-- ================= INTRO ================= -->
   <section class="band">
     <div class="shell">
       <div class="band__head">
         <span class="eyebrow">Method</span>
         <h1>How it works, and what it cannot see</h1>
-        <p>The data, the feature construction, why the split is temporal, and an honest account of the limits.</p>
+        <p>
+          A gradient-boosted model reads the live state of an innings and
+          returns the total that innings will finish on. What follows is where
+          the data comes from, how the features are built so that nothing sees
+          its own future, and an honest account of the limits.
+        </p>
       </div>
-      <div class="empty-state"><strong>The methodology write-up arrives in phase 3</strong>Data source and scale, as-of-date features, the temporal split, and the limitations.</div>
+      <p class="callout callout--warn" data-error hidden></p>
+    </div>
+  </section>
+
+  <!-- ================= DATA ================= -->
+  <section class="band band--deep">
+    <div class="shell">
+      <div class="band__head">
+        <span class="eyebrow">The data</span>
+        <h2>Cricsheet, ball by ball</h2>
+        <p>
+          Every match is a JSON file recording each delivery: who bowled it, who
+          faced it, what it cost, and whether anyone got out. Nothing here is
+          scraped or estimated — it is the scorer's record.
+        </p>
+      </div>
+
+      <dl class="facts">
+        <div>
+          <dt class="stat__label">Matches</dt>
+          <dd class="stat__value num skeleton" data-fill="matches">00,000</dd>
+          <p class="stat__note"><span class="skeleton" data-fill="date-min">start</span> to <span class="skeleton" data-fill="date-max">end</span></p>
+        </div>
+        <div>
+          <dt class="stat__label">Innings</dt>
+          <dd class="stat__value num skeleton" data-fill="innings">00,000</dd>
+          <p class="stat__note">Each one an answer the model has to reach</p>
+        </div>
+        <div>
+          <dt class="stat__label">Deliveries</dt>
+          <dd class="stat__value num skeleton" data-fill="deliveries">0.0 million</dd>
+          <p class="stat__note"><span class="skeleton" data-fill="deliveries-exact">0</span> balls in total</p>
+        </div>
+        <div>
+          <dt class="stat__label">Grounds</dt>
+          <dd class="stat__value num skeleton" data-fill="venues">000</dd>
+          <p class="stat__note">Across <span class="skeleton" data-fill="events">000</span> competitions</p>
+        </div>
+      </dl>
+
+      <div class="callout" style="margin-top: var(--sp-6)">
+        <strong>Not every ball becomes a training row.</strong>
+        The model trains on <span class="skeleton" data-fill="model-rows">0</span> rows,
+        about <span class="skeleton" data-fill="rows-kept-pct">0%</span> of the archive.
+        The rest are dropped for reasons given below: the first five balls of
+        each innings carry no signal, wides and no-balls are not legal
+        deliveries, innings abandoned part-way through have no meaningful final
+        score, and multi-day innings are thinned so they do not swamp
+        everything else by sheer row count.
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FEATURES ================= -->
+  <section class="band">
+    <div class="shell">
+      <div class="band__head">
+        <span class="eyebrow">Features</span>
+        <h2>Nothing may see its own future</h2>
+        <p>
+          Each row describes one moment in one innings. Some of what it
+          describes is visible on the scoreboard; the rest is context the model
+          has to be told. The context is where a prediction model usually
+          starts cheating.
+        </p>
+      </div>
+
+      <ol class="steps">
+        <li>
+          <div>
+            <h3>What the scoreboard shows</h3>
+            <p>
+              Runs, wickets down, legal balls bowled, current run rate, fours
+              and sixes so far, the proportion of dot balls, runs in the last
+              thirty deliveries, and — when the side is chasing — the target and
+              how many runs are still needed. Balls are counted from the legal
+              deliveries only; a wide is not a ball of the over, so counting
+              overs times six would quietly misplace every state.
+            </p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <h3>How far through the innings it is</h3>
+            <p>
+              The single idea that lets one model cover formats that look
+              nothing alike. Rather than "twelve overs gone", the model is given
+              the fraction of the innings that has been bowled. A T20 at ball 60
+              and an ODI at ball 150 are both halfway, and that is what the
+              model sees. A multi-day innings has no ball limit, so the fraction
+              is undefined and left missing — LightGBM sends those rows down
+              their own branch rather than guessing a value for them.
+            </p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <h3>Context, as of the match date</h3>
+            <p>
+              A ground's par score, a side's scoring history, a batter's strike
+              rate and a bowler's economy are all averages — and an average
+              taken over the whole dataset would include matches that had not
+              happened yet. Every one of them is instead an expanding mean
+              shifted by one match, so a row can only ever see fixtures played
+              before it. Replacing any of these with a plain group average would
+              leak the future and quietly improve every metric on the
+              <a href="/results.html">results page</a> without improving the
+              model at all.
+            </p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <h3>Context, per format</h3>
+            <p>
+              Those same averages are computed separately for each format
+              family. A ground's ODI par is not its T20 par; a batter's Test
+              strike rate is not his T20 strike rate. Pooling them would be
+              worse than having no feature at all, because it would hand a T20
+              row a Test-sized expectation and the model would answer
+              accordingly.
+            </p>
+          </div>
+        </li>
+        <li>
+          <div>
+            <h3>What is left missing on purpose</h3>
+            <p>
+              A debutant has no career strike rate. Rather than fill that gap
+              with an average, it is left empty — that a player has no record is
+              itself information, and the model learns to treat those rows
+              differently.
+            </p>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ================= SPLIT ================= -->
+  <section class="band band--deep">
+    <div class="shell">
+      <div class="band__head">
+        <span class="eyebrow">Evaluation</span>
+        <h2>Trained on the past, tested on the future</h2>
+        <p>
+          Every ball of one innings carries the same answer — the total that
+          innings finished on. Split those rows at random and ball 12.3 lands in
+          training while ball 12.4 lands in testing: two nearly identical rows
+          with the same answer. The model recalls rather than predicts, and the
+          score looks excellent.
+        </p>
+      </div>
+
+      <p style="max-width: var(--shell-prose); margin-bottom: var(--sp-6)">
+        So matches are ordered by date and cut in time. The model trains on the
+        earliest, tunes on the middle, and is judged only on matches played
+        after both — the same position anyone would be in using it on a live
+        game.
+      </p>
+
+      <div class="table-wrap" style="max-width: 52rem">
+        <div class="scroll-x">
+          <table class="data">
+            <caption>The split is by match date, so no innings is ever divided across two sets.</caption>
+            <thead>
+              <tr>
+                <th scope="col">Set</th>
+                <th scope="col" class="n">Matches</th>
+                <th scope="col">From</th>
+                <th scope="col">To</th>
+                <th scope="col">Used for</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">Train</th>
+                <td class="n skeleton" data-fill="train-n">0</td>
+                <td class="skeleton" data-fill="train-start">—</td>
+                <td class="skeleton" data-fill="train-end">—</td>
+                <td>Fitting the model</td>
+              </tr>
+              <tr>
+                <th scope="row">Validation</th>
+                <td class="n skeleton" data-fill="valid-n">0</td>
+                <td class="skeleton" data-fill="valid-start">—</td>
+                <td class="skeleton" data-fill="valid-end">—</td>
+                <td>Early stopping, and calibrating the 80% band</td>
+              </tr>
+              <tr>
+                <th scope="row">Test</th>
+                <td class="n skeleton" data-fill="test-n">0</td>
+                <td class="skeleton" data-fill="test-start">—</td>
+                <td class="skeleton" data-fill="test-end">—</td>
+                <td>Every figure quoted on this site</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <p class="callout callout--predict" style="margin-top: var(--sp-5)">
+        <strong>The same model on a random split scores much better.</strong>
+        That gap is not an improvement, it is the size of the self-deception, and
+        the <a href="/results.html">results page</a> puts all three numbers side
+        by side rather than quoting the flattering one.
+      </p>
+    </div>
+  </section>
+
+  <!-- ================= INTERVALS ================= -->
+  <section class="band">
+    <div class="shell">
+      <div class="band__head">
+        <span class="eyebrow">Uncertainty</span>
+        <h2>The band, and how it is checked</h2>
+      </div>
+      <div style="max-width: var(--shell-prose)" class="stack">
+        <p>
+          A single projected number would imply a confidence nobody should have
+          about a cricket innings. Every prediction therefore comes with a band
+          that is meant to contain the true final score four times in five.
+        </p>
+        <p>
+          Producing that band takes two steps. Quantile models give a first
+          estimate, but on their own they turn out to be far too narrow. So the
+          model's errors on the validation matches are measured separately for
+          each format and each quarter of the innings, and those measured errors
+          set the width of the band instead. A band in the first over of a Test
+          is not the same width as one in the last over of a T20, and it should
+          not be.
+        </p>
+        <p>
+          The result is then checked against the test matches: how often does
+          the band actually contain the answer? Both the target and the achieved
+          figure are on the <a href="/results.html">results page</a>. An
+          interval nobody measured is a decoration.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= LIMITS ================= -->
+  <section class="band band--deep">
+    <div class="shell">
+      <div class="band__head band__head--actual">
+        <span class="eyebrow">Limits</span>
+        <h2>What it does not know</h2>
+        <p>
+          These are not caveats added for form. Each one is a real reason a
+          prediction from this model can be wrong in a way it cannot anticipate.
+        </p>
+      </div>
+
+      <div class="grid grid--2">
+        <article class="card card--warn">
+          <h3 class="card__title">No weather, no pitch</h3>
+          <p class="card__body">
+            Rain, dew under lights, a green seaming surface or a worn fifth-day
+            pitch are all absent from the data. A ground's par score absorbs some
+            of this on average and none of it on the day. An innings played on an
+            unusual surface will be predicted as though the surface were typical.
+          </p>
+        </article>
+
+        <article class="card card--warn">
+          <h3 class="card__title">No team sheet</h3>
+          <p class="card__body">
+            The model knows which sides are playing, not who is in them. A team
+            missing its three best batters is, to this model, the same team.
+            Individual form enters only through whoever happens to be at the
+            crease and bowling on that delivery.
+          </p>
+        </article>
+
+        <article class="card card--warn">
+          <h3 class="card__title">Chases end early</h3>
+          <p class="card__body">
+            A side chasing 160 that reaches it in the eighteenth over stops
+            batting. Its final score is not what it could have made — it is where
+            the match ended. Those innings are censored observations, and the
+            model is trained on them as though they were completed totals, which
+            biases second-innings predictions downward.
+          </p>
+        </article>
+
+        <article class="card card--warn">
+          <h3 class="card__title">Multi-day innings are thinned</h3>
+          <p class="card__body">
+            A Test innings can run past six hundred deliveries. Kept in full,
+            multi-day cricket would dominate the training loss purely by row
+            count, so only every fourth ball of a long innings is kept. The
+            multi-day model therefore learns from a coarser view of an innings
+            than the T20 model does.
+          </p>
+        </article>
+
+        <article class="card card--warn">
+          <h3 class="card__title">Cricket keeps changing</h3>
+          <p class="card__body">
+            A total that won a T20 match a decade ago would lose one now. The
+            model is trained on the past and will drift as scoring rates move
+            on. It needs retraining periodically, and its error on recent
+            matches is the only honest guide to how it will do tomorrow.
+          </p>
+        </article>
+
+        <article class="card card--warn">
+          <h3 class="card__title">Unfamiliar teams and grounds</h3>
+          <p class="card__body">
+            A side or venue the model never saw in training falls back to a
+            format-wide average. The prediction will still look confident and
+            will be worth considerably less. Predictions are also floored at the
+            current score and capped at a physically reachable total, because
+            without those bounds an unfamiliar name can push the model somewhere
+            impossible.
+          </p>
+        </article>
+      </div>
+
+      <p class="callout" style="margin-top: var(--sp-6)">
+        Taken together: this is a model of how innings like this one have tended
+        to finish, not a forecast of how this particular innings will finish.
+        Read the band, not just the number.
+      </p>
     </div>
   </section>
 
@@ -89,5 +419,7 @@
 </footer>
 
 <script src="/js/nav.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/about.js"></script>
 </body>
 </html>
