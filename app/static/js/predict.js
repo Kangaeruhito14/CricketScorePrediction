@@ -254,6 +254,8 @@
         notice.hidden = true;
       }
     }
+    rememberTeams();
+    syncInningsOptions();
     updateOvers();
   }
 
@@ -438,6 +440,8 @@
           { keepValue: true });
         c.setValue(pair[1], { silent: true });
       });
+      rememberTeams();
+      syncInningsOptions();
       num.innings.value = String(s.innings);
       num.overs.value = String(s.overs_completed);
       num.balls.value = String(s.balls_this_over);
@@ -474,6 +478,65 @@
     const chasing = parseInt(num.innings.value, 10) > 1;
     el('target-field').hidden = !chasing;
     if (!chasing) { num.target.value = '0'; setError('target', ''); }
+  }
+
+  /* A limited-overs match has two innings; only a multi-day match has four.
+     Offering 3rd and 4th for a T20 lets someone build a state that cannot
+     exist, so the options that do not apply are removed rather than left
+     selectable and rejected later. */
+  function syncInningsOptions() {
+    const limited = Boolean(totalBalls());
+    const max = limited ? 2 : 4;
+    Array.prototype.forEach.call(num.innings.options, function (opt) {
+      opt.hidden = Number(opt.value) > max;
+      opt.disabled = Number(opt.value) > max;
+    });
+    if (Number(num.innings.value) > max) {
+      num.innings.value = String(max);
+      onInningsChange();
+    }
+  }
+
+  /* ------------------------------------------------------- team clash -----
+     A side cannot bowl at itself. Rather than let the pair be set to the same
+     team and reject it at submit - which is what happened, and which is
+     especially easy to hit in a two-team series - the field the user did not
+     touch takes the value the other one just gave up. Picking the batting side
+     as the bowling side therefore swaps them, which is what was meant. */
+  const lastTeam = { batting_team: '', bowling_team: '' };
+
+  function rememberTeams() {
+    lastTeam.batting_team = combos.batting_team.getValue();
+    lastTeam.bowling_team = combos.bowling_team.getValue();
+  }
+
+  /* The one remaining side, when the competition has exactly two. A tour is
+     two teams, so the opponent is not really a choice. */
+  function soleOpponentOf(value) {
+    const rest = combos.batting_team.items.filter(function (i) {
+      return i.value && i.value !== value;
+    });
+    return rest.length === 1 ? rest[0].value : '';
+  }
+
+  function onTeamChange(side, other) {
+    return function (value) {
+      const otherCombo = combos[other];
+      if (value && otherCombo.getValue() === value) {
+        // Hand the other field whatever this one just gave up. If this field
+        // was empty, fall back to the only remaining side, so a two-team
+        // series resolves to the opponent rather than to nothing.
+        const handover = (lastTeam[side] && lastTeam[side] !== value)
+          ? lastTeam[side] : soleOpponentOf(value);
+        otherCombo.setValue(handover, { silent: true });
+      } else if (value && !otherCombo.getValue()) {
+        const only = soleOpponentOf(value);
+        if (only) otherCombo.setValue(only, { silent: true });
+      }
+      rememberTeams();
+      setError(side, '');
+      setError(other, '');
+    };
   }
 
   function collect() {
@@ -532,12 +595,14 @@
     const bowl = combos.bowling_team.getValue();
     combos.batting_team.setValue(bowl, { silent: true });
     combos.bowling_team.setValue(bat, { silent: true });
+    rememberTeams();
     setError('batting_team', '');
     setError('bowling_team', '');
   });
 
   el('reset-btn').addEventListener('click', function () {
     form.reset();
+    syncInningsOptions();
     onInningsChange();
     updateOvers();
     clearErrors();
@@ -574,8 +639,12 @@
         emptyLabel: 'Any competition',
         onChange: function () { loadOptions({ events: false }); }
       });
-      combo('f-bat', 'batting_team', {});
-      combo('f-bowl', 'bowling_team', {});
+      combo('f-bat', 'batting_team', {
+        onChange: onTeamChange('batting_team', 'bowling_team')
+      });
+      combo('f-bowl', 'bowling_team', {
+        onChange: onTeamChange('bowling_team', 'batting_team')
+      });
       combo('f-venue', 'venue', {});
 
       const families = FORMAT_ORDER.filter(function (f) {
@@ -599,6 +668,8 @@
       const venues = combos.venue.items;
       if (venues.length) combos.venue.setValue(venues[0].value, { silent: true });
 
+      rememberTeams();
+      syncInningsOptions();
       onInningsChange();
       updateOvers();
       if (!History.available()) {
