@@ -252,6 +252,10 @@
 
     rows.forEach(function (r) {
       const row = el('div', 'importance__row');
+      /* The container declares role="list", so each row has to declare
+         itself an item. Without this it is a list containing nothing, which
+         is worse for a screen reader than no role at all. */
+      row.setAttribute('role', 'listitem');
 
       const name = el('div', 'importance__name');
       name.appendChild(document.createTextNode(FEATURE_LABEL[r.feature] || r.feature));
